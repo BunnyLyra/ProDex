@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Коллекция">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Моя коллекция TCGP</title>
+<style>
+:root{--bg:#f3f1fa;--sf:#fff;--tx:#1f1b33;--mt:#6f6a85;--ac:#5b3fd6;--ln:#ddd8ee;--ok:#2a9d6a;color-scheme:light;
+box-sizing:border-box;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+@media(prefers-color-scheme:dark){:root{--bg:#14112a;--sf:#201c3d;--tx:#efecfb;--mt:#9d98bb;--ac:#9a85ff;--ln:#352f5e;--ok:#49c78f;color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,"SF Pro Text",system-ui,sans-serif}
+header{position:sticky;top:env(safe-area-inset-top,0);z-index:5;background:var(--bg);padding:10px 14px 0;border-bottom:1px solid var(--ln)}
+h1{font-size:20px;margin:0 0 8px;font-weight:700}
+nav{display:flex;gap:4px}
+nav button{flex:1;padding:10px 6px;border:0;background:none;color:var(--mt);font:inherit;font-weight:600;border-bottom:3px solid transparent}
+nav button.on{color:var(--ac);border-color:var(--ac)}
+main{padding:12px 14px 40px;max-width:1200px;margin:0 auto}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
+select,input{font:inherit;color:var(--tx);background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:9px 11px;min-width:0}
+input{flex:1;min-width:140px}
+.seg{display:flex;border:1px solid var(--ln);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--sf);color:var(--mt);padding:9px 12px;font:inherit}
+.seg button.on{background:var(--ac);color:#fff}
+.prog{color:var(--mt);margin:2px 0 12px;font-size:14px}
+.meter{height:6px;border-radius:3px;background:var(--ln);overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:var(--ok)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+.card{position:relative;border:0;padding:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.card .im{display:block;aspect-ratio:367/512;border-radius:8px;background:var(--sf);border:1px solid var(--ln);overflow:hidden;position:relative}
+.card img{width:100%;height:100%;object-fit:cover;display:block;transition:filter .15s}
+.card .fb{position:absolute;inset:0;padding:8px;font-size:13px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--mt)}
+.card:not(.on) img{filter:grayscale(1) opacity(.4)}
+.card.on .im{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok)}
+.card.on .im::after{content:"✓";position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;background:var(--ok);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
+.card .nm{display:block;font-size:12px;margin-top:4px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .no{display:block;font-size:11px;color:var(--mt)}
+.grp{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-bottom:12px}
+.grp h3{margin:0;font-size:16px;display:flex;justify-content:space-between;gap:8px}
+.grp h3 span{color:var(--mt);font-weight:500;font-size:14px}
+.grp.done{border-color:var(--ok)}
+.grp .grid{margin-top:10px;grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}
+.empty{color:var(--mt);padding:24px 8px;text-align:center}
+.more{display:block;margin:6px auto;padding:10px 18px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);color:var(--tx);font:inherit}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.pk{position:relative;background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:10px 8px 8px;text-align:center;cursor:pointer;color:inherit;font:inherit}
+.pk img{width:76px;height:76px;object-fit:contain;display:block;margin:0 auto 4px}
+.pk.none img{filter:grayscale(1) opacity(.3)}
+.pk .nm{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk .no{display:block;font-size:12px;color:var(--mt)}
+.pk .br{display:block;height:5px;border-radius:3px;background:var(--ln);margin:6px 4px 0;overflow:hidden}
+.pk .br i{display:block;height:100%;background:var(--ac)}
+.pk.full .br i{background:var(--ok)}
+.pk .hr{position:absolute;left:7px;top:5px;font-size:13px;color:#ff3b5c}
+.gh{display:flex;justify-content:space-between;align-items:baseline;margin:18px 2px 8px;font-size:20px;font-weight:700}
+.gh span{color:var(--mt);font-weight:500;font-size:16px}
+.fav{border:1px solid var(--ln);background:var(--sf);color:var(--mt);border-radius:10px;padding:9px 12px;font:inherit}
+.fav.on{color:#ff3b5c;border-color:#ff3b5c}
+.dhead{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.dhead img{width:92px;height:92px;object-fit:contain}
+.heart{border:1px solid var(--ln);background:var(--sf);border-radius:50%;width:46px;height:46px;font-size:24px;color:var(--mt)}
+.heart.on{color:#ff3b5c;border-color:#ff3b5c}
+.mctl{display:flex;align-items:center;gap:14px}.mctl button{width:44px;height:44px;border-radius:50%;border:1px solid var(--ln);background:var(--sf);color:var(--tx);font-size:22px}.mctl b{font-size:18px;min-width:70px;text-align:center}
+.og{grid-column:1/-1;border:1px dashed var(--ln);border-radius:12px;padding:8px}.ol{font-size:12px;color:var(--mt);margin-bottom:6px}
+.mv{border:1px solid var(--ln);background:none;color:var(--mt);border-radius:10px;padding:7px 12px;font:inherit;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div id="info" style="font-size:12px;color:var(--mt);float:right;margin-top:6px"></div>
+  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v14</small></h1>
+  <nav id="nav">
+    <button data-t="cards" class="on">Карточки</button>
+    <button data-t="species">Покемоны</button>
+    <button data-t="missions">Миссии</button>
+    <button data-t="stats">Статистика</button>
+  </nav>
+</header>
+<main id="main"><p class="empty">Загружаю карточки…</p></main>
+
+<script src="missions.js"></script>
+<script>
+/* Данные и картинки берутся из репозитория flibustier/pokemon-tcg-pocket-database */
+const PKG = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database";
+const RAW = "https://raw.githubusercontent.com/flibustier/pokemon-tcg-pocket-database/main";
+const PIN = PKG + "@2.10.0"; /* запасная версия, если в свежей поменялись файлы */
+/* Сначала ищем файлы рядом с index.html (твоя копия в том же репозитории), потом в интернете */
+/* Основа: cards.json (все сеты). cards.extra.json добавляет тип, стихию и стадию (но он может быть старее). */
+const BASE_URLS = ["dist/cards.json", PKG + "/dist/cards.json", RAW + "/dist/cards.json", PIN + "/dist/cards.json"];
+const DATA_URLS = ["dist/cards.extra.json", PKG + "/dist/cards.extra.json", RAW + "/dist/cards.extra.json", PIN + "/dist/cards.extra.json"];
+const PACK_URLS = ["dist/cards.min.json", PKG + "/dist/cards.min.json", RAW + "/dist/cards.min.json", PIN + "/dist/cards.min.json"];
+const SETS_URLS = ["dist/sets.json", PKG + "/dist/sets.json", RAW + "/dist/sets.json", PIN + "/dist/sets.json"];
+/* Картинки: приложение пробует адреса по очереди и запоминает рабочий */
+const IMG_SRC = [
+  (s, n, f) => "dist/images/cards-by-set/" + s + "/" + n + ".webp",
+  (s, n, f) => "dist/images/cards/" + f,
+  (s, n, f) => "cards-by-set/" + s + "/" + n + ".webp",
+  (s, n, f) => "dist/cards-by-set/" + s + "/" + n + ".webp",
+  (s, n, f) => "images/" + s + "/" + n + ".webp",
+  (s, n, f) => "dist/images/" + s + "/" + n + ".webp",
+  (s, n, f) => "images/" + f,
+  (s, n, f) => RAW + "/cards-by-set/" + s + "/" + n + ".webp",
+  (s, n, f) => PKG + "/cards-by-set/" + s + "/" + n + ".webp",
+  (s, n, f) => "https://cdn.jsdelivr.net/gh/flibustier/pokemon-tcg-pocket-database@main/cards-by-set/" + s + "/" + n + ".webp",
+  (s, n, f) => PIN + "/cards-by-set/" + s + "/" + n + ".webp",
+  (s, n, f) => "https://raw.githubusercontent.com/flibustier/pokemon-tcg-exchange/main/public/images/cards/" + f
+];
+let pref = 0;
+window.imgFail = 0;
+window.imgErr = el => {
+  const t = (+el.dataset.t || 0) + 1;
+  if (t >= IMG_SRC.length) {
+    el.remove();
+    if (++window.imgFail === 6 && !document.getElementById("imgwarn")) {
+      const w = document.createElement("div"); w.id = "imgwarn"; w.className = "prog"; w.style.padding = "6px 14px";
+      w.textContent = "Картинки не найдены. Пример проверенного адреса: " + IMG_SRC[0](el.dataset.s, el.dataset.n, el.dataset.f) + " (и ещё " + (IMG_SRC.length - 1) + " вариантов)";
+      document.body.insertBefore(w, document.querySelector("main"));
+    }
+    return;
+  }
+  el.dataset.t = t; const k = (pref + t) % IMG_SRC.length; el.dataset.k = k; el.src = IMG_SRC[k](el.dataset.s, el.dataset.n, el.dataset.f);
+};
+window.imgOk = el => { pref = +(el.dataset.k || 0); };
+
+/* Миссии лежат в файле missions.js (он должен быть рядом с index.html) */
+const MISSIONS = window.MISSIONS || {};
+let MIS = {};
+const CODE_LIST = [["Genetic Apex", "A1"], ["Mythical Island", "A1a"], ["Space-Time Smackdown", "A2"], ["Triumphant Light", "A2a"], ["Shining Revelry", "A2b"], ["Celestial Guardians", "A3"], ["Extradimensional Crisis", "A3a"], ["Eevee Grove", "A3b"], ["Wisdom of Sea and Sky", "A4"], ["Secluded Springs", "A4a"], ["Deluxe Pack: ex", "A4b"], ["Mega Rising", "B1"], ["Crimson Blaze", "B1a"], ["Fantastical Parade", "B2"], ["Paldean Wonders", "B2a"], ["Mega Shine", "B2b"], ["Pulsing Aura", "B3"], ["Paradox Drive", "B3a"], ["Everyday Wonders", "B3b"], ["Ruler of the Skies", "B4"], ["Team Rocket's Ambition", "B4a"], ["Deluxe Pack: Mega", "B4b"], ["Dual Fusion", "C1"]];
+function buildMIS() {
+  MIS = {};
+  const CODE_BY_NAME = {}; CODE_LIST.forEach(x => { CODE_BY_NAME[norm(x[0])] = x[1]; });
+  const byName = new Map(sets.map(x => [norm(setName(x)), x.code]));
+  Object.keys(MISSIONS).forEach(key => {
+    const want = CODE_BY_NAME[norm(key)];
+    const code = byName.get(norm(key)) || (sets.find(x => x.code === want) || {}).code;
+    if (!code) return;
+    const lc = code.toLowerCase();
+    MIS[lc] = MISSIONS[key].map(m => {
+      const x = Object.assign({}, m);
+      if (m.groups) x.groups = m.groups.map(g => g.map(e => typeof e === "number" ? lc + "-" + e : String(e).toLowerCase()));
+      if (m.inset) x.filter = Object.assign({}, m.filter || {}, { set: code });
+      return x;
+    });
+  });
+}
+
+const KEY = "tcgp-owned-v1";
+let owned = new Set();
+try { owned = new Set(JSON.parse(localStorage.getItem(KEY) || "[]").map(x => String(x).toLowerCase())); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...owned])); } catch (e) {} };
+
+let cards = [], sets = [], tab = "cards", dex = [], spMap = new Map(), keyMap = new Map();
+const st = { set: "", q: "", show: "all", mset: "", secret: false, limit: 30, pack: "", gen: "", favOnly: false, flt: "all", sort: "num", open: 0, scroll: 0 };
+const cid = c => (c.set + "-" + c.number).toLowerCase();
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+const base = n => n.replace(/\s+ex$/i, "").trim();
+const setName = s => (s.name && s.name.en) || s.code;
+
+const asArr = d => Array.isArray(d) ? d : (d && typeof d === "object" ? (Array.isArray(d.cards) ? d.cards : (Object.values(d).find(Array.isArray) || [])) : []);
+async function getMany(urls) { const r = await Promise.all(urls.map(u => getJson([u]).then(d => d, () => null))); return r.filter(x => x != null); }
+async function getJson(urls) {
+  const errs = [];
+  for (const u of urls) {
+    try { const r = await fetch(u); if (r.ok) return await r.json(); errs.push(u.replace(/^https:\/\//, "").slice(0, 60) + " → " + r.status); }
+    catch (e) { errs.push(u.replace(/^https:\/\//, "").slice(0, 60) + " → нет ответа"); }
+  }
+  throw new Error(errs.join("; "));
+}
+
+/* ===== Покемоны: список всех 1025 (PokeAPI), картинки, избранное ===== */
+const SPR = [
+  id => "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/home/" + id + ".png",
+  id => "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/" + id + ".png",
+  id => "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + id + ".png"
+];
+window.sprErr = el => { const t = (+el.dataset.t || 0) + 1; if (t >= SPR.length) { el.style.visibility = "hidden"; return; } el.dataset.t = t; el.src = SPR[t](el.dataset.d); };
+const GEN_END = [151, 251, 386, 493, 649, 721, 809, 905, 1025];
+const genOf = id => GEN_END.findIndex(x => id <= x) + 1;
+const SPECIAL = { "nidoran-f": "Nidoran ♀", "nidoran-m": "Nidoran ♂", "mr-mime": "Mr. Mime", "mime-jr": "Mime Jr.", "mr-rime": "Mr. Rime", "ho-oh": "Ho-Oh", "porygon-z": "Porygon-Z", "jangmo-o": "Jangmo-o", "hakamo-o": "Hakamo-o", "kommo-o": "Kommo-o", "type-null": "Type: Null", "farfetchd": "Farfetch’d", "sirfetchd": "Sirfetch’d", "flabebe": "Flabébé", "wo-chien": "Wo-Chien", "chien-pao": "Chien-Pao", "ting-lu": "Ting-Lu", "chi-yu": "Chi-Yu" };
+const norm = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/♀/g, "f").replace(/♂/g, "m").toLowerCase().replace(/[^a-z0-9]/g, "");
+const pretty = slug => SPECIAL[slug] || slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+const FKEY = "tcgp-fav-v1";
+let fav = new Set();
+try { fav = new Set((JSON.parse(localStorage.getItem(FKEY) || "[]")).map(Number)); } catch (e) {}
+const saveFav = () => { try { localStorage.setItem(FKEY, JSON.stringify([...fav])); } catch (e) {} };
+
+async function loadDex() {
+  let slugs = null;
+  try { slugs = JSON.parse(localStorage.getItem("tcgp-dex-v1") || "null"); } catch (e) {}
+  if (!Array.isArray(slugs) || slugs.filter(Boolean).length < 1000) {
+    try {
+      const r = await getJson(["https://pokeapi.co/api/v2/pokemon-species?limit=2000"]);
+      slugs = [];
+      r.results.forEach(x => { const id = +String(x.url).replace(/\/$/, "").split("/").pop(); if (id >= 1 && id <= 1025) slugs[id - 1] = x.name; });
+      try { localStorage.setItem("tcgp-dex-v1", JSON.stringify(slugs)); } catch (e) {}
+    } catch (e) { slugs = null; }
+  }
+  return slugs;
+}
+function buildDex(slugs) {
+  dex = [];
+  (slugs || []).forEach((slug, i) => { if (slug && i < 1025) dex.push({ id: i + 1, slug, name: pretty(slug), gen: genOf(i + 1), key: norm(slug) }); });
+}
+function speciesOf(name) {
+  const t = String(name).replace(/\s+ex$/i, "").split(/\s+/);
+  for (let len = t.length; len >= 1; len--) for (let i = 0; i + len <= t.length; i++) { const k = norm(t.slice(i, i + len).join(" ")); if (keyMap.has(k)) return keyMap.get(k); }
+  return 0;
+}
+function indexSpecies() {
+  keyMap = new Map(dex.map(d => [d.key, d.id])); spMap = new Map();
+  const TW = /\b(bag|ball|cape|potion|helmet|scarf|band|charm|stone|fossil|orders?|research|machine|berry|gear|slab|flute|cloak|bell|shell|vest|glasses|ticket|incense|feather|cart|stadium|energy)\b/i;
+  cards.forEach(c => { if (!c.type) c.poke = speciesOf(c.name) > 0 && !TW.test(c.name); if (!c.poke) return; const id = speciesOf(c.name); if (id) { if (!spMap.has(id)) spMap.set(id, []); spMap.get(id).push(c); } });
+}
+const prog = d => { const l = spMap.get(d.id) || []; return { h: l.filter(c => owned.has(cid(c))).length, t: l.length }; };
+function pkTile(d) {
+  const p = prog(d);
+  return '<button class="pk' + (p.t ? "" : " none") + (p.t && p.h === p.t ? " full" : "") + '" data-d="' + d.id + '">' + (fav.has(d.id) ? '<span class="hr">♥</span>' : "") +
+    '<img loading="lazy" alt="" src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)">' +
+    '<span class="nm">' + esc(d.name) + '</span><span class="no">#' + d.id + '</span><span class="br"><i style="width:' + (p.t ? Math.round(p.h / p.t * 100) : 0) + '%"></i></span></button>';
+}
+
+/* ===== Миссии: список карточек, условие (авто) или ручной счётчик ===== */
+const MKEY = "tcgp-mis-v1";
+let mstate = {};
+try { mstate = JSON.parse(localStorage.getItem(MKEY) || "{}") || {}; } catch (e) {}
+const saveM = () => { try { localStorage.setItem(MKEY, JSON.stringify(mstate)); } catch (e) {} };
+const mid = (k, x) => k + ":" + x.title;
+const SKEY = "tcgp-sec-v1";
+let secOv = {};
+try { secOv = JSON.parse(localStorage.getItem(SKEY) || "{}") || {}; } catch (e) {}
+const saveSec = () => { try { localStorage.setItem(SKEY, JSON.stringify(secOv)); } catch (e) {} };
+const isSec = (k, x) => { const v = secOv[mid(k, x)]; return v === undefined ? !!x.secret : !!v; };
+const pct = (h, t) => t ? Math.round(h / t * 100) : 0;
+const matches = (c, f) => Object.keys(f).every(key => {
+  const v = f[key], cv = String(c[key] == null ? "" : c[key]).toLowerCase();
+  if (key === "name") return (Array.isArray(v) ? v : [v]).some(y => cv.includes(String(y).toLowerCase()));
+  return (Array.isArray(v) ? v : [v]).some(y => String(y).toLowerCase() === cv);
+});
+const nameCache = new Map();
+const nn = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+function byPhrase(p) { if (!nameCache.has(p)) { const q = " " + nn(p) + " "; nameCache.set(p, cards.filter(c => (" " + nn(c.name) + " ").includes(q))); } return nameCache.get(p); }
+const gOk = g => g.some(e => e[0] === "~" ? byPhrase(e.slice(1)).some(c => owned.has(cid(c))) : owned.has(e));
+function mst(k, x) {
+  if (x.groups) { const h = x.groups.filter(gOk).length, t = x.need || x.groups.length; return { h: Math.min(h, t), t, done: t > 0 && h >= t }; }
+  if (x.manual) { const t = x.need || 1, h = Math.min(+mstate[mid(k, x)] || 0, t); return { h, t, done: h >= t }; }
+  if (x.filter) { const l = cards.filter(c => matches(c, x.filter)), h = l.filter(c => owned.has(cid(c))).length, t = x.need || l.length; return { h: Math.min(h, t), t, done: t > 0 && h >= t, n: l.length }; }
+  const cl = x.cards || [], h = cl.filter(i => owned.has(i)).length, t = x.need || cl.length;
+  return { h: Math.min(h, t), t, done: t > 0 && h >= t };
+}
+function drawStats(body) {
+  const row = (name, a, b) => '<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(name) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + a + " / " + b + " · " + pct(a, b) + "%</span></div>" + meter(a, b) + "</div>";
+  const got = l => l.filter(c => owned.has(cid(c))).length;
+  let out = '<section class="grp"><h3>Карточки <span>' + pct(got(cards), cards.length) + "%</span></h3>" + row("Всего собрано", got(cards), cards.length) + "</section>";
+  out += '<section class="grp"><h3>Карточки по сетам</h3>' + sets.map(s => { const l = cards.filter(c => c.set === s.code); return l.length ? row(setName(s) + " (" + s.code + ")", got(l), l.length) : ""; }).join("") + "</section>";
+  const prow = [];
+  sets.forEach(x => packsFor(x).forEach(pn => { const l = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn)); if (l.length) prow.push(row(setName(x) + " · " + pn, got(l), l.length)); }));
+  if (prow.length) out += '<section class="grp"><h3>Карточки по пакам</h3>' + prow.join("") + "</section>";
+  out += '<section class="grp"><h3>Карточки по редкости</h3>' + [...new Set(cards.map(c => c.rarity || "—"))].sort((a, b) => { const o = ["C", "U", "R", "RR", "SR", "AR", "SAR", "IM", "S", "SSR", "UR"], i = o.indexOf(a), j = o.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || a.localeCompare(b); }).map(r => { const l = cards.filter(c => (c.rarity || "—") === r); return row(r, got(l), l.length); }).join("") + "</section>";
+  const ms = []; Object.keys(MIS).forEach(k => MIS[k].forEach(x => ms.push({ k, x, s: mst(k, x) })));
+  if (ms.length) {
+    const d = f => ms.filter(o => f(o) && o.s.done).length, n = f => ms.filter(f).length;
+    out += '<section class="grp"><h3>Миссии <span>' + pct(d(() => 1), ms.length) + "%</span></h3>" + row("Всего закрыто", d(() => 1), ms.length) +
+      row("Обычные", d(o => !isSec(o.k, o.x)), n(o => !isSec(o.k, o.x))) + row("Секретные", d(o => isSec(o.k, o.x)), n(o => isSec(o.k, o.x))) + "</section>";
+    out += '<section class="grp"><h3>Миссии по сетам</h3>' + Object.keys(MIS).map(k => { const l = ms.filter(o => o.k === k), s = sets.find(z => z.code.toLowerCase() === k); return row(s ? setName(s) + " (" + s.code + ")" : k, l.filter(o => o.s.done).length, l.length); }).join("") + "</section>";
+  }
+  body.innerHTML = out;
+}
+
+/* ===== Паки: у сета бывает несколько паков (например Charizard / Mewtwo / Pikachu) ===== */
+const packsFor = s => (s.packs && s.packs.length) ? s.packs : [...new Set(cards.filter(c => c.set === s.code).flatMap(c => c.packs || []))];
+function packOpts() {
+  const out = [];
+  (st.set ? sets.filter(x => x.code === st.set) : sets).forEach(x => { const ps = packsFor(x); if (ps.length) ps.forEach(pn => out.push([x.code + "|" + pn, st.set ? pn : pn + " · " + x.code])); });
+  return out;
+}
+function cf() {
+  const q = st.q.trim().toLowerCase(), pp = st.pack ? st.pack.split("|") : null;
+  return cards.filter(c => (!st.set || c.set === st.set) && (!q || c.name.toLowerCase().includes(q)) && (!pp || (c.set === pp[0] && (c.packs || []).includes(pp.slice(1).join("|")))));
+}
+function tile(c) {
+  return '<button class="card' + (owned.has(cid(c)) ? " on" : "") + '" data-id="' + cid(c) + '">' +
+    '<span class="im"><span class="fb">' + esc(c.name) + '</span><img loading="lazy" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)"></span>' +
+    '<span class="nm">' + esc(c.name) + '</span><span class="no">' + c.set + " · " + c.number + " · " + c.rarity + "</span></button>";
+}
+function setSelect(id, val, withAll) {
+  return '<select id="' + id + '">' + (withAll ? '<option value="">Все сеты</option>' : "") +
+    sets.map(s => '<option value="' + s.code + '"' + (s.code === val ? " selected" : "") + ">" + esc(setName(s)) + " (" + s.code + ")</option>").join("") + "</select>";
+}
+function meter(a, b) { return '<div class="meter"><i style="width:' + (b ? Math.round(a / b * 100) : 0) + '%"></i></div>'; }
+
+function build() {
+  const m = $("#main");
+  if (tab === "cards") {
+    const po = packOpts();
+    m.innerHTML = '<div class="bar">' + setSelect("fset", st.set, true) +
+      (po.length ? '<select id="fpack"><option value="">Все паки</option>' + po.map(x => '<option value="' + esc(x[0]) + '"' + (st.pack === x[0] ? " selected" : "") + ">" + esc(x[1]) + "</option>").join("") + "</select>" : "") +
+      '<input id="fq" type="search" placeholder="Поиск по имени" value="' + esc(st.q) + '">' +
+      '<div class="seg" id="fshow">' + [["all", "Все"], ["have", "Есть"], ["miss", "Нет"]].map(x => '<button data-v="' + x[0] + '"' + (st.show === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div></div>" +
+      '<div class="prog" id="prog"></div><div class="grid" id="body"></div>';
+    $("#fset").onchange = e => { st.set = e.target.value; st.pack = ""; build(); };
+    if ($("#fpack")) $("#fpack").onchange = e => { st.pack = e.target.value; draw(); };
+    $("#fq").oninput = e => { st.q = e.target.value; draw(); };
+    $("#fshow").onclick = e => { const v = e.target.dataset.v; if (v) { st.show = v; build(); } };
+  } else if (tab === "species") {
+    if (st.open) {
+      const d = dex.find(x => x.id === st.open) || { id: st.open, name: "#" + st.open };
+      const f = fav.has(d.id);
+      m.innerHTML = '<button class="more" id="back" style="margin:0 0 10px">← Назад</button>' +
+        '<div class="dhead"><img src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)" alt="">' +
+        '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + esc(d.name) + ' <span class="prog">#' + d.id + '</span></div><div class="prog" id="dprog"></div></div>' +
+        '<button class="heart' + (f ? " on" : "") + '" id="hrt">' + (f ? "♥" : "♡") + '</button></div><div class="grid" id="body"></div>';
+    } else if (!dex.length) {
+      m.innerHTML = '<p class="empty">Не удалось загрузить список покемонов. Нужен интернет при первом запуске, обнови страницу.</p>';
+    } else {
+      const opt = (arr, cur) => arr.map(x => '<option value="' + x[0] + '"' + (String(cur) === String(x[0]) ? " selected" : "") + ">" + x[1] + "</option>").join("");
+      m.innerHTML = '<div class="bar"><input id="fq" type="search" placeholder="Поиск по имени или номеру" value="' + esc(st.q) + '"></div>' +
+        '<div class="bar"><select id="fgen">' + opt([["", "Все поколения"]].concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(g => [g, "Поколение " + g])), st.gen) + "</select>" +
+        '<button class="fav' + (st.favOnly ? " on" : "") + '" id="ffav">♥ Избранные</button>' +
+        '<select id="fflt">' + opt([["all", "Все"], ["have", "Есть карты"], ["none", "Нет карт"], ["full", "Собрано"], ["tcg", "Есть в TCG Pocket"]], st.flt) + "</select>" +
+        '<select id="fsort">' + opt([["num", "По номеру"], ["name", "По имени"], ["prog", "По прогрессу"]], st.sort) + '</select></div><div id="body"></div>';
+      $("#fq").oninput = e => { st.q = e.target.value; draw(); };
+      $("#fgen").onchange = e => { st.gen = e.target.value; draw(); };
+      $("#fflt").onchange = e => { st.flt = e.target.value; draw(); };
+      $("#fsort").onchange = e => { st.sort = e.target.value; draw(); };
+      $("#ffav").onclick = e => { st.favOnly = !st.favOnly; e.currentTarget.classList.toggle("on", st.favOnly); draw(); };
+    }
+  } else if (tab === "stats") {
+    m.innerHTML = '<div id="body"></div>';
+  } else {
+    if (!st.mset && sets.length) st.mset = (sets.find(x => MIS[x.code.toLowerCase()]) || sets[0]).code;
+    m.innerHTML = '<div class="bar">' + setSelect("fset", st.mset, false) +
+      '<div class="seg" id="fsec"><button data-v="0"' + (!st.secret ? ' class="on"' : '') + '>Обычные</button><button data-v="1"' + (st.secret ? ' class="on"' : '') + '>Секретные</button></div></div><div id="body"></div>';
+    $("#fset").onchange = e => { st.mset = e.target.value; draw(); };
+    $("#fsec").onclick = e => { const v = e.target.dataset.v; if (v) { st.secret = v === "1"; build(); } };
+  }
+  draw();
+}
+
+function draw() {
+  const body = $("#body"), q = st.q.trim().toLowerCase();
+  if (tab === "cards") {
+    let list = cf();
+    const have = list.filter(c => owned.has(cid(c))).length;
+    $("#prog").innerHTML = "Собрано " + have + " из " + list.length + meter(have, list.length);
+    if (st.show === "have") list = list.filter(c => owned.has(cid(c)));
+    if (st.show === "miss") list = list.filter(c => !owned.has(cid(c)));
+    body.innerHTML = list.length ? list.map(tile).join("") : '<p class="empty">Ничего не найдено</p>';
+    body.className = "grid";
+  } else if (tab === "species") {
+    if (st.open) {
+      const l = spMap.get(st.open) || [], h = l.filter(c => owned.has(cid(c))).length;
+      $("#dprog").innerHTML = l.length ? "Собрано " + h + " из " + l.length + meter(h, l.length) : "Для этого покемона нет карточек в TCG Pocket";
+      body.innerHTML = l.map(tile).join("");
+    } else if (dex.length) {
+      const list = dex.filter(d => {
+        if (st.gen && d.gen !== +st.gen) return false;
+        if (st.favOnly && !fav.has(d.id)) return false;
+        if (q && !d.name.toLowerCase().includes(q) && String(d.id) !== q) return false;
+        if (st.flt === "all") return true;
+        const p = prog(d);
+        return (st.flt === "have" && p.h > 0) || (st.flt === "none" && p.h === 0) || (st.flt === "full" && p.t > 0 && p.h === p.t) || (st.flt === "tcg" && p.t > 0);
+      });
+      if (st.sort === "name") list.sort((a, b) => a.name.localeCompare(b.name));
+      if (st.sort === "prog") { const r = d => { const p = prog(d); return p.t ? p.h / p.t : -1; }; list.sort((a, b) => r(b) - r(a) || a.id - b.id); }
+      if (!list.length) { body.innerHTML = '<p class="empty">Ничего не найдено</p>'; return; }
+      if (st.sort === "num" && !st.gen) {
+        let out = "";
+        for (let g = 1; g <= 9; g++) { const gl = list.filter(d => d.gen === g); if (gl.length) out += '<div class="gh">Поколение ' + g + "<span>" + gl.length + '</span></div><div class="dgrid">' + gl.map(pkTile).join("") + "</div>"; }
+        body.innerHTML = out;
+      } else body.innerHTML = '<div class="dgrid">' + list.map(pkTile).join("") + "</div>";
+    }
+  } else if (tab === "stats") {
+    drawStats(body);
+  } else {
+    const k = (st.mset || "").toLowerCase(), all = MIS[k] || [];
+    const items = all.map((x, i) => ({ x, i, s: mst(k, x) })).filter(o => isSec(k, o.x) === st.secret);
+    const active = items.filter(o => !o.s.done), fin = items.filter(o => o.s.done);
+    const byId = new Map(cards.map(c => [cid(c), c]));
+    const one = o => {
+      const x = o.x, s = o.s, at = ' data-mk="' + k + '" data-mi="' + o.i + '"';
+      let inner;
+      if (x.manual) inner = x.need > 1 ? '<div class="mctl"><button' + at + ' data-a="-">−</button><b>' + s.h + " / " + s.t + "</b><button" + at + ' data-a="+">+</button></div>' :
+        '<button class="fav' + (s.done ? " on" : "") + '"' + at + ' data-a="t">' + (s.done ? "✓ Выполнено" : "Отметить выполненной") + "</button>";
+      else if (x.groups) inner = '<div class="grid">' + x.groups.map(g => {
+        const cs = []; g.forEach(e => { if (e[0] === "~") byPhrase(e.slice(1)).slice(0, 8).forEach(c => cs.push(c)); else if (byId.get(e)) cs.push(byId.get(e)); });
+        if (!cs.length) return "";
+        if (g.length === 1 && g[0][0] !== "~") return tile(cs[0]);
+        return '<div class="og"><div class="ol">' + (gOk(g) ? "✓ " : "") + 'любая из этих:</div><div class="grid">' + cs.map(tile).join("") + "</div></div>";
+      }).join("") + "</div>";
+      else if (x.filter) inner = '<p class="prog" style="margin:0">Считается автоматически по твоей коллекции. Подходящих карточек: ' + s.n + "</p>";
+      else inner = '<div class="grid">' + x.cards.map(i => byId.get(i)).filter(Boolean).map(tile).join("") + "</div>";
+      return '<section class="grp' + (s.done ? " done" : "") + '"><h3>' + (s.done ? "✓ " : "") + esc(x.title) + "<span>" + s.h + " / " + s.t + "</span></h3>" +
+        ((x.manual && x.need > 1) || x.filter || x.need ? meter(s.h, s.t) : "") +
+        (x.reward ? '<p class="prog" style="margin:6px 0 0">Награда: ' + esc(x.reward) + "</p>" : "") + (x.note ? '<p class="prog" style="margin:6px 0 0">' + esc(x.note) + "</p>" : "") + (x.guess ? '<p class="prog" style="margin:6px 0 0">⚠ Состав восстановлен по неполному тексту источника, сверь с игрой.</p>' : "") + '<div style="margin-top:10px">' + inner + '</div><div style="text-align:right;margin-top:8px"><button class="mv" data-mv="' + k + "|" + o.i + '">' + (isSec(k, x) ? "← перенести в обычные" : "перенести в секретные →") + "</button></div></section>";
+    };
+    body.innerHTML = items.length ? '<div class="prog">Выполнено миссий: ' + fin.length + " из " + items.length + " (" + pct(fin.length, items.length) + "%)" + meter(fin.length, items.length) + "</div>" +
+      active.map(one).join("") + (fin.length ? '<div class="gh" style="font-size:17px">Выполнено <span>' + fin.length + "</span></div>" + fin.map(one).join("") : "") +
+      '<p class="prog">В игре некоторые миссии засчитывают любую версию карты, поэтому сверяйся с самой миссией.</p>' :
+      '<p class="empty">Для этого сета пока нет ' + (st.secret ? "секретных" : "обычных") + " миссий. Они хранятся в файле missions.js.</p>";
+  }
+}
+
+document.addEventListener("click", e => {
+  const mv = e.target.closest("[data-mv]");
+  if (mv) { const p = mv.dataset.mv.split("|"), x = MIS[p[0]][+p[1]]; secOv[mid(p[0], x)] = !isSec(p[0], x); saveSec(); draw(); return; }
+  const mb = e.target.closest("[data-mk]");
+  if (mb) { const k = mb.dataset.mk, x = MIS[k][+mb.dataset.mi], id = mid(k, x), a = mb.dataset.a, cur = +mstate[id] || 0, mx = x.need || 1; mstate[id] = a === "+" ? Math.min(cur + 1, mx) : a === "-" ? Math.max(0, cur - 1) : (cur ? 0 : 1); saveM(); draw(); return; }
+  const pk = e.target.closest(".pk");
+  if (pk) { st.scroll = window.scrollY || 0; st.open = +pk.dataset.d; build(); window.scrollTo(0, 0); return; }
+  if (e.target.closest("#back")) { st.open = 0; build(); window.scrollTo(0, st.scroll || 0); return; }
+  if (e.target.closest("#hrt")) { fav.has(st.open) ? fav.delete(st.open) : fav.add(st.open); saveFav(); build(); return; }
+  const b = e.target.closest(".card"); if (!b) return;
+  const i = b.dataset.id;
+  owned.has(i) ? owned.delete(i) : owned.add(i);
+  save();
+  if (tab === "cards" && st.show === "all") {
+    document.querySelectorAll('[data-id="' + i + '"]').forEach(x => x.classList.toggle("on", owned.has(i)));
+    const l = cf();
+    const h = l.filter(c => owned.has(cid(c))).length;
+    $("#prog").innerHTML = "Собрано " + h + " из " + l.length + meter(h, l.length);
+  } else draw();
+});
+$("#nav").onclick = e => {
+  const t = e.target.dataset.t; if (!t) return;
+  tab = t; st.limit = 30;
+  document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x.dataset.t === t));
+  build();
+};
+
+(async () => {
+  const msg = t => { $("#main").innerHTML = '<p class="empty">' + t + "</p>"; };
+  window.addEventListener("error", e => { if (!cards.length) msg("Ошибка в приложении: " + esc(e.message)); });
+  try {
+    /* основа: cards.json (все сеты); cards.extra.json добавляет тип, стихию, стадию. Источники объединяются */
+    const [bParts, eParts, sParts, slugs] = await Promise.all([getMany(BASE_URLS.slice(0, 3)), getMany(DATA_URLS.slice(0, 3)), getMany(SETS_URLS.slice(0, 3)), loadDex()]);
+    if (!bParts.length && !eParts.length) await getJson(BASE_URLS);
+    const ex = new Map(); eParts.forEach(d => asArr(d).forEach(x => { const k = x.set + "-" + x.number; if (!ex.has(k)) ex.set(k, x); }));
+    const seen = new Set(), c = [];
+    bParts.concat(eParts).forEach(d => asArr(d).forEach(x => { const k = x.set + "-" + x.number; if (!seen.has(k)) { seen.add(k); c.push(Object.assign({}, ex.get(k) || {}, x)); } }));
+    cards = c.map(x => Object.assign({}, x, { poke: x.type === "pokemon", packs: x.packs || [] }));
+    const sm = new Map();
+    sParts.forEach(d => Object.values(d || {}).flat().forEach(x => { if (x && x.code && !sm.has(x.code)) sm.set(x.code, x); }));
+    sets = [...sm.values()].sort((a, b) => (b.releaseDate || "").localeCompare(a.releaseDate || ""));
+    const known = new Set(sets.map(x => x.code));
+    [...new Set(cards.map(x => x.set))].filter(x => !known.has(x)).forEach(code => sets.push({ code, name: { en: code } }));
+    const si = new Map(sets.map((x, i) => [x.code, i]));
+    cards.sort((a, b) => (si.has(a.set) ? si.get(a.set) : 999) - (si.has(b.set) ? si.get(b.set) : 999) || a.number - b.number);
+    if (!cards.length) throw new Error("список карточек пуст");
+    buildDex(slugs); indexSpecies(); buildMIS();
+    const nw = sets.find(x => cards.some(c => c.set === x.code));
+    $("#info").textContent = "Карточек: " + cards.length + " · сетов: " + sets.filter(x => cards.some(c => c.set === x.code)).length + (nw ? " · новейший: " + nw.code : "");
+    build();
+  } catch (e) {
+    msg("Не удалось загрузить данные.<br><small>" + esc(e.message || e) + "</small><br>Проверь интернет и обнови страницу.");
+  }
+})();
+</script>
+</body>
+</html>
