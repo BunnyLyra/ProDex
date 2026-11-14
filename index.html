@@ -66,13 +66,13 @@ input{flex:1;min-width:140px}
 .heart.on{color:#ff3b5c;border-color:#ff3b5c}
 .mctl{display:flex;align-items:center;gap:14px}.mctl button{width:44px;height:44px;border-radius:50%;border:1px solid var(--ln);background:var(--sf);color:var(--tx);font-size:22px}.mctl b{font-size:18px;min-width:70px;text-align:center}
 .og{grid-column:1/-1;border:1px dashed var(--ln);border-radius:12px;padding:8px}.ol{font-size:12px;color:var(--mt);margin-bottom:6px}
-.mv{border:1px solid var(--ln);background:none;color:var(--mt);border-radius:10px;padding:7px 12px;font:inherit;font-size:13px}
+.mv{border:1px solid var(--ln);background:none;color:var(--mt);border-radius:10px;padding:4px 12px;font:inherit;font-size:18px;line-height:1.2}.mh{cursor:pointer;align-items:center;gap:8px}.mh .mt{flex:1;color:var(--tx);font-weight:700;font-size:16px}.mh .chev{color:var(--mt);width:14px;font-size:14px}
 </style>
 </head>
 <body>
 <header>
   <div id="info" style="font-size:12px;color:var(--mt);float:right;margin-top:6px"></div>
-  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v14</small></h1>
+  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v15</small></h1>
   <nav id="nav">
     <button data-t="cards" class="on">Карточки</button>
     <button data-t="species">Покемоны</button>
@@ -230,6 +230,17 @@ let mstate = {};
 try { mstate = JSON.parse(localStorage.getItem(MKEY) || "{}") || {}; } catch (e) {}
 const saveM = () => { try { localStorage.setItem(MKEY, JSON.stringify(mstate)); } catch (e) {} };
 const mid = (k, x) => k + ":" + x.title;
+const RORD = ["C", "U", "R", "RR", "SR", "AR", "SAR", "IM", "S", "SSR", "UR"];
+function cmpCard(a, b) {
+  const ra = RORD.indexOf(a.rarity), rb = RORD.indexOf(b.rarity), x = ra < 0 ? 99 : ra, y = rb < 0 ? 99 : rb;
+  if (x !== y) return x - y;
+  const sa = sets.findIndex(z => z.code === a.set), sb = sets.findIndex(z => z.code === b.set);
+  return (sb - sa) || a.number - b.number;
+}
+const FKEY2 = "tcgp-fold-v1";
+let foldOv = {};
+try { foldOv = JSON.parse(localStorage.getItem(FKEY2) || "{}") || {}; } catch (e) {}
+const saveFold = () => { try { localStorage.setItem(FKEY2, JSON.stringify(foldOv)); } catch (e) {} };
 const SKEY = "tcgp-sec-v1";
 let secOv = {};
 try { secOv = JSON.parse(localStorage.getItem(SKEY) || "{}") || {}; } catch (e) {}
@@ -258,7 +269,7 @@ function drawStats(body) {
   let out = '<section class="grp"><h3>Карточки <span>' + pct(got(cards), cards.length) + "%</span></h3>" + row("Всего собрано", got(cards), cards.length) + "</section>";
   out += '<section class="grp"><h3>Карточки по сетам</h3>' + sets.map(s => { const l = cards.filter(c => c.set === s.code); return l.length ? row(setName(s) + " (" + s.code + ")", got(l), l.length) : ""; }).join("") + "</section>";
   const prow = [];
-  sets.forEach(x => packsFor(x).forEach(pn => { const l = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn)); if (l.length) prow.push(row(setName(x) + " · " + pn, got(l), l.length)); }));
+  sets.forEach(x => { if (/promo/i.test(x.code + " " + setName(x))) { const l = cards.filter(c => c.set === x.code); if (l.length) prow.push(row(setName(x), got(l), l.length)); return; } packsFor(x).forEach(pn => { const l = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn)); if (l.length) prow.push(row(setName(x) + " · " + pn, got(l), l.length)); }); });
   if (prow.length) out += '<section class="grp"><h3>Карточки по пакам</h3>' + prow.join("") + "</section>";
   out += '<section class="grp"><h3>Карточки по редкости</h3>' + [...new Set(cards.map(c => c.rarity || "—"))].sort((a, b) => { const o = ["C", "U", "R", "RR", "SR", "AR", "SAR", "IM", "S", "SSR", "UR"], i = o.indexOf(a), j = o.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || a.localeCompare(b); }).map(r => { const l = cards.filter(c => (c.rarity || "—") === r); return row(r, got(l), l.length); }).join("") + "</section>";
   const ms = []; Object.keys(MIS).forEach(k => MIS[k].forEach(x => ms.push({ k, x, s: mst(k, x) })));
@@ -275,7 +286,7 @@ function drawStats(body) {
 const packsFor = s => (s.packs && s.packs.length) ? s.packs : [...new Set(cards.filter(c => c.set === s.code).flatMap(c => c.packs || []))];
 function packOpts() {
   const out = [];
-  (st.set ? sets.filter(x => x.code === st.set) : sets).forEach(x => { const ps = packsFor(x); if (ps.length) ps.forEach(pn => out.push([x.code + "|" + pn, st.set ? pn : pn + " · " + x.code])); });
+  (st.set ? sets.filter(x => x.code === st.set) : sets).forEach(x => { if (/promo/i.test(x.code + " " + setName(x))) return; const ps = packsFor(x); if (ps.length) ps.forEach(pn => out.push([x.code + "|" + pn, st.set ? pn : pn + " · " + x.code])); });
   return out;
 }
 function cf() {
@@ -284,7 +295,7 @@ function cf() {
 }
 function tile(c) {
   return '<button class="card' + (owned.has(cid(c)) ? " on" : "") + '" data-id="' + cid(c) + '">' +
-    '<span class="im"><span class="fb">' + esc(c.name) + '</span><img loading="lazy" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)"></span>' +
+    '<span class="im"><img loading="lazy" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)"></span>' +
     '<span class="nm">' + esc(c.name) + '</span><span class="no">' + c.set + " · " + c.number + " · " + c.rarity + "</span></button>";
 }
 function setSelect(id, val, withAll) {
@@ -353,7 +364,7 @@ function draw() {
     body.className = "grid";
   } else if (tab === "species") {
     if (st.open) {
-      const l = spMap.get(st.open) || [], h = l.filter(c => owned.has(cid(c))).length;
+      const l = (spMap.get(st.open) || []).slice().sort(cmpCard), h = l.filter(c => owned.has(cid(c))).length;
       $("#dprog").innerHTML = l.length ? "Собрано " + h + " из " + l.length + meter(h, l.length) : "Для этого покемона нет карточек в TCG Pocket";
       body.innerHTML = l.map(tile).join("");
     } else if (dex.length) {
@@ -394,9 +405,10 @@ function draw() {
       }).join("") + "</div>";
       else if (x.filter) inner = '<p class="prog" style="margin:0">Считается автоматически по твоей коллекции. Подходящих карточек: ' + s.n + "</p>";
       else inner = '<div class="grid">' + x.cards.map(i => byId.get(i)).filter(Boolean).map(tile).join("") + "</div>";
-      return '<section class="grp' + (s.done ? " done" : "") + '"><h3>' + (s.done ? "✓ " : "") + esc(x.title) + "<span>" + s.h + " / " + s.t + "</span></h3>" +
+      const col = foldOv[mid(k, x)] !== undefined ? foldOv[mid(k, x)] : s.done;
+      return '<section class="grp' + (s.done ? " done" : "") + '"><h3 class="mh" data-fold="' + k + "|" + o.i + '"><span class="chev">' + (col ? "▸" : "▾") + '</span><span class="mt">' + (s.done ? "✓ " : "") + esc(x.title) + "</span><span>" + s.h + " / " + s.t + '</span><button class="mv" data-mv="' + k + "|" + o.i + '">' + (isSec(k, x) ? "←" : "→") + "</button></h3>" +
         ((x.manual && x.need > 1) || x.filter || x.need ? meter(s.h, s.t) : "") +
-        (x.reward ? '<p class="prog" style="margin:6px 0 0">Награда: ' + esc(x.reward) + "</p>" : "") + (x.note ? '<p class="prog" style="margin:6px 0 0">' + esc(x.note) + "</p>" : "") + (x.guess ? '<p class="prog" style="margin:6px 0 0">⚠ Состав восстановлен по неполному тексту источника, сверь с игрой.</p>' : "") + '<div style="margin-top:10px">' + inner + '</div><div style="text-align:right;margin-top:8px"><button class="mv" data-mv="' + k + "|" + o.i + '">' + (isSec(k, x) ? "← перенести в обычные" : "перенести в секретные →") + "</button></div></section>";
+        (col ? "" : (x.reward ? '<p class="prog" style="margin:6px 0 0">Награда: ' + esc(x.reward) + "</p>" : "") + (x.note ? '<p class="prog" style="margin:6px 0 0">' + esc(x.note) + "</p>" : "") + (x.guess ? '<p class="prog" style="margin:6px 0 0">⚠ Состав восстановлен по неполному тексту источника, сверь с игрой.</p>' : "") + '<div style="margin-top:10px">' + inner + "</div>") + "</section>";
     };
     body.innerHTML = items.length ? '<div class="prog">Выполнено миссий: ' + fin.length + " из " + items.length + " (" + pct(fin.length, items.length) + "%)" + meter(fin.length, items.length) + "</div>" +
       active.map(one).join("") + (fin.length ? '<div class="gh" style="font-size:17px">Выполнено <span>' + fin.length + "</span></div>" + fin.map(one).join("") : "") +
@@ -407,6 +419,8 @@ function draw() {
 
 document.addEventListener("click", e => {
   const mv = e.target.closest("[data-mv]");
+  const fd = !mv && e.target.closest("[data-fold]");
+  if (fd) { const p = fd.dataset.fold.split("|"), x = MIS[p[0]][+p[1]], id = mid(p[0], x), cur = foldOv[id] !== undefined ? foldOv[id] : mst(p[0], x).done; foldOv[id] = !cur; saveFold(); draw(); return; }
   if (mv) { const p = mv.dataset.mv.split("|"), x = MIS[p[0]][+p[1]]; secOv[mid(p[0], x)] = !isSec(p[0], x); saveSec(); draw(); return; }
   const mb = e.target.closest("[data-mk]");
   if (mb) { const k = mb.dataset.mk, x = MIS[k][+mb.dataset.mi], id = mid(k, x), a = mb.dataset.a, cur = +mstate[id] || 0, mx = x.need || 1; mstate[id] = a === "+" ? Math.min(cur + 1, mx) : a === "-" ? Math.max(0, cur - 1) : (cur ? 0 : 1); saveM(); draw(); return; }
