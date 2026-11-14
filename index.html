@@ -33,10 +33,8 @@ input{flex:1;min-width:140px}
 .card{position:relative;border:0;padding:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
 .card .im{display:block;aspect-ratio:367/512;border-radius:8px;background:var(--sf);border:1px solid var(--ln);overflow:hidden;position:relative}
 .card img{width:100%;height:100%;object-fit:cover;display:block;transition:filter .15s}
-.card .fb{position:absolute;inset:0;padding:8px;font-size:13px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--mt)}
 .card:not(.on) img{filter:grayscale(1) opacity(.4)}
-.card.on .im{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok)}
-.card.on .im::after{content:"✓";position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;background:var(--ok);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
+.card.on .im{border-color:var(--ok)}
 .card .nm{display:block;font-size:12px;margin-top:4px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card .no{display:block;font-size:11px;color:var(--mt)}
 .grp{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-bottom:12px}
@@ -67,12 +65,34 @@ input{flex:1;min-width:140px}
 .mctl{display:flex;align-items:center;gap:14px}.mctl button{width:44px;height:44px;border-radius:50%;border:1px solid var(--ln);background:var(--sf);color:var(--tx);font-size:22px}.mctl b{font-size:18px;min-width:70px;text-align:center}
 .og{grid-column:1/-1;border:1px dashed var(--ln);border-radius:12px;padding:8px}.ol{font-size:12px;color:var(--mt);margin-bottom:6px}
 .mv{border:1px solid var(--ln);background:none;color:var(--mt);border-radius:10px;padding:4px 12px;font:inherit;font-size:18px;line-height:1.2}.mh{cursor:pointer;align-items:center;gap:8px}.mh .mt{flex:1;color:var(--tx);font-weight:700;font-size:16px}.mh .chev{color:var(--mt);width:14px;font-size:14px}
+.tb{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hh,100px));z-index:4;background:var(--bg);margin:0 -14px;padding:8px 14px 2px}
+.tb .bar{margin-bottom:6px}
+.card .ck{position:absolute;right:5px;bottom:5px;width:26px;height:26px;padding:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.6);background:rgba(0,0,0,.2);color:#fff;font-size:14px;line-height:1;opacity:.65;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.card .ck::before{content:"";position:absolute;inset:-8px}
+.card.on .ck{background:rgba(42,157,106,.55);border-color:rgba(255,255,255,.85);opacity:.9}
+#cv{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 30px}
+#cv[hidden]{display:none}
+.cvw{display:flex;gap:16px;flex-wrap:wrap;max-width:1000px;margin:0 auto;align-items:flex-start}
+.cvl{flex:1 1 300px;max-width:420px}.cvr{flex:2 1 320px}
+.panel{background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:14px;margin-bottom:12px}
+.cvimg{width:100%;display:block;border-radius:12px;aspect-ratio:367/512;object-fit:cover}
+.cvt{font-size:20px;font-weight:700;margin-top:10px}
+.crow{display:flex;align-items:center;gap:12px;font-size:17px}.crow input{width:22px;height:22px;flex:none;padding:0}
+.irow{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--ln)}.irow:last-child{border-bottom:0}.irow span{color:var(--mt)}.irow b{text-align:right;font-weight:600}
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.hc{background:var(--sf);border:1px solid var(--ln);border-radius:18px;padding:16px}.hc small{color:var(--mt);font-size:13px}.hc .big{font-size:36px;font-weight:800;line-height:1.1;margin:2px 0}.hc .sub{color:var(--mt);font-size:13px}
+.acc{background:var(--sf);border:1px solid var(--ln);border-radius:16px;margin-bottom:10px;overflow:hidden}
+.acc summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer}.acc summary::-webkit-details-marker{display:none}
+.ai{width:40px;height:40px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.at{flex:1;min-width:0}.at b{display:block;font-size:16px}.at small{color:var(--mt)}
+.chv{color:var(--mt);font-size:24px;transition:transform .15s}.acc[open] .chv{transform:rotate(90deg)}
+.accb{padding:0 14px 8px;border-top:1px solid var(--ln)}
 </style>
 </head>
 <body>
 <header>
   <div id="info" style="font-size:12px;color:var(--mt);float:right;margin-top:6px"></div>
-  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v16</small></h1>
+  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v17</small></h1>
   <nav id="nav">
     <button data-t="cards" class="on">Карточки</button>
     <button data-t="species">Покемоны</button>
@@ -82,6 +102,7 @@ input{flex:1;min-width:140px}
 </header>
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
 
+<div id="cv" hidden></div>
 <script src="missions.js"></script>
 <script>
 /* Данные и картинки берутся из репозитория flibustier/pokemon-tcg-pocket-database */
@@ -154,7 +175,7 @@ try { owned = new Set(JSON.parse(localStorage.getItem(KEY) || "[]").map(x => Str
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...owned])); } catch (e) {} };
 
 let cards = [], sets = [], tab = "cards", dex = [], spMap = new Map(), keyMap = new Map();
-const st = { set: "", q: "", show: "all", mset: "", secret: false, limit: 30, pack: "", gen: "", favOnly: false, flt: "all", sort: "num", open: 0, scroll: 0 };
+const st = { set: "", q: "", show: "all", mset: "", secret: false, limit: 30, cardOpen: "", pack: "", gen: "", favOnly: false, flt: "all", sort: "num", open: 0, scroll: 0 };
 const cid = c => (c.set + "-" + c.number).toLowerCase();
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -230,6 +251,11 @@ let mstate = {};
 try { mstate = JSON.parse(localStorage.getItem(MKEY) || "{}") || {}; } catch (e) {}
 const saveM = () => { try { localStorage.setItem(MKEY, JSON.stringify(mstate)); } catch (e) {} };
 const mid = (k, x) => k + ":" + x.title;
+const TLAB = { pokemon: "Покемоны", item: "Предметы", supporter: "Тренеры", tool: "Инструменты", stadium: "Стадионы" };
+const TONE = { pokemon: "Покемон", item: "Предмет", supporter: "Тренер", tool: "Инструмент", stadium: "Стадион" };
+const ELAB = { grass: "Трава", fire: "Огонь", water: "Вода", lightning: "Молния", psychic: "Психо", fighting: "Боевые", darkness: "Тьма", metal: "Металл", dragon: "Дракон", colorless: "Обычный" };
+const SLAB = { basic: "Базовые", "1": "1 стадия", "2": "2 стадия" };
+const RNAME = { C: "Common", U: "Uncommon", R: "Rare", RR: "Double Rare", AR: "Art Rare", SR: "Super Rare", SAR: "Special Art Rare", IM: "Immersive Rare", UR: "Ultra Rare" };
 const RORD = ["C", "U", "R", "RR", "SR", "AR", "SAR", "IM", "S", "SSR", "UR", "AN"];
 function cmpCard(a, b) {
   const ra = RORD.indexOf(a.rarity), rb = RORD.indexOf(b.rarity), x = ra < 0 ? 99 : ra, y = rb < 0 ? 99 : rb;
@@ -266,27 +292,67 @@ function mst(k, x) {
 function drawStats(body) {
   const row = (name, a, b) => '<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(name) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + a + " / " + b + " · " + pct(a, b) + "%</span></div>" + meter(a, b) + "</div>";
   const got = l => l.filter(c => owned.has(cid(c))).length;
-  let out = '<section class="grp"><h3>Карточки <span>' + pct(got(cards), cards.length) + "%</span></h3>" + row("Всего собрано", got(cards), cards.length) + "</section>";
-  out += '<section class="grp"><h3>Карточки по сетам</h3>' + sets.map(s => { const l = cards.filter(c => c.set === s.code); return l.length ? row(setName(s) + " (" + s.code + ")", got(l), l.length) : ""; }).join("") + "</section>";
+  const acc = (icon, title, sub, inner) => '<details class="acc"><summary><span class="ai">' + icon + '</span><span class="at"><b>' + title + "</b><small>" + sub + '</small></span><span class="chv">›</span></summary><div class="accb">' + inner + "</div></details>";
+  const grpBy = (fn, lab, order) => { const m = new Map(); cards.forEach(c => { const k = fn(c); if (k == null) return; if (!m.has(k)) m.set(k, []); m.get(k).push(c); }); return order.filter(k => m.has(k)).map(k => row(lab[k] || String(k), got(m.get(k)), m.get(k).length)).join(""); };
+  const hc = (title, a, b, note) => '<div class="hc"><small>' + title + '</small><div class="big">' + pct(a, b) + '%</div><div class="sub">' + a + " / " + b + (note ? " · " + note : "") + "</div>" + meter(a, b) + "</div>";
+  const ms = []; Object.keys(MIS).forEach(k => MIS[k].forEach(x => ms.push({ k, x, s: mst(k, x) })));
+  const md = ms.filter(o => o.s.done).length;
+  let sp = 0, spT = 0; dex.forEach(d => { const p = prog(d); if (p.t) { spT++; if (p.h) sp++; } });
+  let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + "</div>";
+  const sw = sets.filter(x => cards.some(c => c.set === x.code));
+  out += acc("🗂️", "Карточки по сетам", sw.length + " сетов", sw.map(x => { const l = cards.filter(c => c.set === x.code); return row(setName(x) + " (" + x.code + ")", got(l), l.length); }).join(""));
   const prow = [];
   sets.forEach(x => { if (/promo/i.test(x.code + " " + setName(x))) { const l = cards.filter(c => c.set === x.code); if (l.length) prow.push(row(setName(x), got(l), l.length)); return; } packsFor(x).forEach(pn => { const l = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn)); if (l.length) prow.push(row(setName(x) + " · " + pn, got(l), l.length)); }); });
-  if (prow.length) out += '<section class="grp"><h3>Карточки по пакам</h3>' + prow.join("") + "</section>";
-  out += '<section class="grp"><h3>Карточки по редкости</h3>' + [...new Set(cards.map(c => c.rarity || "—"))].sort((a, b) => { const i = RORD.indexOf(a), j = RORD.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || a.localeCompare(b); }).map(r => { const l = cards.filter(c => (c.rarity || "—") === r); return row(r, got(l), l.length); }).join("") + "</section>";
-  const grpBy = (fn, lab, order) => { const m = new Map(); cards.forEach(c => { const k = fn(c); if (k == null) return; if (!m.has(k)) m.set(k, []); m.get(k).push(c); }); return order.filter(k => m.has(k)).map(k => row(lab[k] || String(k), got(m.get(k)), m.get(k).length)).join(""); };
+  if (prow.length) out += acc("🎴", "Карточки по пакам", prow.length + " пакетов", prow.join(""));
+  const rars = [...new Set(cards.map(c => c.rarity || "—"))].sort((a, b) => { const i = RORD.indexOf(a), j = RORD.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || a.localeCompare(b); });
+  out += acc("💎", "Карточки по редкости", rars.length + " видов", rars.map(r => { const l = cards.filter(c => (c.rarity || "—") === r); return row(r, got(l), l.length); }).join(""));
   if (cards.some(c => c.type)) {
     const ex = cards.filter(c => c.poke && / ex$/i.test(c.name));
-    out += '<section class="grp"><h3>Карточки по типам</h3>' + grpBy(c => c.type || null, { pokemon: "Покемоны", item: "Предметы", supporter: "Помощники", tool: "Инструменты", stadium: "Стадионы" }, ["pokemon", "item", "supporter", "tool", "stadium"]) + (ex.length ? row("из них покемоны ex", got(ex), ex.length) : "") + "</section>";
-    out += '<section class="grp"><h3>Покемоны по стихиям</h3>' + grpBy(c => c.element || null, { grass: "Трава", fire: "Огонь", water: "Вода", lightning: "Молния", psychic: "Психика", fighting: "Борьба", darkness: "Тьма", metal: "Металл", dragon: "Дракон", colorless: "Бесцветные" }, ["grass", "fire", "water", "lightning", "psychic", "fighting", "darkness", "metal", "dragon", "colorless"]) + "</section>";
-    out += '<section class="grp"><h3>Покемоны по стадиям</h3>' + grpBy(c => c.stage == null ? null : String(c.stage), { basic: "Базовые", "1": "1 стадия", "2": "2 стадия" }, ["basic", "1", "2"]) + "</section>";
+    out += acc("🧩", "Карточки по типам", "покемоны и тренеры", grpBy(c => c.type || null, TLAB, ["pokemon", "item", "supporter", "tool", "stadium"]));
+    out += acc("🌱", "Покемоны по стадиям", "базовые, 1 и 2 стадия, ex", grpBy(c => c.stage == null ? null : String(c.stage), SLAB, ["basic", "1", "2"]) + (ex.length ? row("Покемоны ex", got(ex), ex.length) : ""));
+    out += acc("🔥", "Покемоны по стихиям", "10 стихий", grpBy(c => c.element || null, ELAB, ["grass", "fire", "water", "lightning", "psychic", "fighting", "darkness", "metal", "dragon", "colorless"]));
   }
-  const ms = []; Object.keys(MIS).forEach(k => MIS[k].forEach(x => ms.push({ k, x, s: mst(k, x) })));
   if (ms.length) {
     const d = f => ms.filter(o => f(o) && o.s.done).length, n = f => ms.filter(f).length;
-    out += '<section class="grp"><h3>Миссии <span>' + pct(d(() => 1), ms.length) + "%</span></h3>" + row("Всего закрыто", d(() => 1), ms.length) +
-      row("Обычные", d(o => !isSec(o.k, o.x)), n(o => !isSec(o.k, o.x))) + row("Секретные", d(o => isSec(o.k, o.x)), n(o => isSec(o.k, o.x))) + "</section>";
-    out += '<section class="grp"><h3>Миссии по сетам</h3>' + Object.keys(MIS).map(k => { const l = ms.filter(o => o.k === k), s = sets.find(z => z.code.toLowerCase() === k); return row(s ? setName(s) + " (" + s.code + ")" : k, l.filter(o => o.s.done).length, l.length); }).join("") + "</section>";
+    out += acc("🎯", "Миссии", "обычные и секретные", row("Всего закрыто", md, ms.length) + row("Обычные", d(o => !isSec(o.k, o.x)), n(o => !isSec(o.k, o.x))) + row("Секретные", d(o => isSec(o.k, o.x)), n(o => isSec(o.k, o.x))));
+    out += acc("🗺️", "Миссии по сетам", Object.keys(MIS).length + " сетов", Object.keys(MIS).map(k => { const l = ms.filter(o => o.k === k), s = sets.find(z => z.code.toLowerCase() === k); return row(s ? setName(s) + " (" + s.code + ")" : k, l.filter(o => o.s.done).length, l.length); }).join(""));
   }
   body.innerHTML = out;
+}
+
+/* ===== Отметка карточки и страница карточки ===== */
+function toggleCard(i) {
+  owned.has(i) ? owned.delete(i) : owned.add(i);
+  save();
+  document.querySelectorAll('.card[data-id="' + i + '"]').forEach(x => { x.classList.toggle("on", owned.has(i)); const k = x.querySelector ? x.querySelector(".ck") : null; if (k) k.textContent = owned.has(i) ? "✓" : ""; });
+  if (tab === "cards" && st.show === "all") {
+    const l = cf(), h = l.filter(c => owned.has(cid(c))).length;
+    $("#prog").innerHTML = "Собрано " + h + " из " + l.length + meter(h, l.length);
+  } else draw();
+  if (st.cardOpen) renderCard();
+}
+function openCard(i) {
+  st.cardOpen = i; renderCard();
+  if (document.body && document.body.style) document.body.style.overflow = "hidden";
+}
+function closeCard() {
+  st.cardOpen = ""; const v = $("#cv"); if (v) v.hidden = true;
+  if (document.body && document.body.style) document.body.style.overflow = "";
+}
+function renderCard() {
+  const id = st.cardOpen, v = $("#cv"), c = cards.find(x => cid(x) === id);
+  if (!c) { v.hidden = true; return; }
+  const own = owned.has(id), total = cards.filter(x => x.set === c.set).length, s = sets.find(x => x.code === c.set);
+  const r = (k, val) => val == null || val === "" ? "" : '<div class="irow"><span>' + k + "</span><b>" + esc(val) + "</b></div>";
+  const el = c.element ? (ELAB[c.element] || c.element) + (c.element2 ? " / " + (ELAB[c.element2] || c.element2) : "") : "";
+  v.innerHTML = '<div class="cvw"><div class="cvl"><button class="more" id="cvback" style="margin:0 0 10px">← Назад</button><div class="panel">' +
+    '<img class="cvimg" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)">' +
+    '<div class="cvt">' + esc(c.name) + '</div><div class="prog" style="margin:0">' + c.number + " · " + esc(s ? setName(s) : c.set) + "</div></div></div>" +
+    '<div class="cvr"><div class="panel"><label class="crow"><input type="checkbox" id="cvck"' + (own ? " checked" : "") + "><span>В коллекции</span></label></div>" +
+    '<div class="panel">' + r("Сет", (s ? setName(s) + " · " : "") + c.set) + r("Номер", c.number + " / " + total) + r("Пак", (c.packs || []).join(", ") || "—") +
+    r("Редкость", RNAME[c.rarity] ? c.rarity + " · " + RNAME[c.rarity] : c.rarity) + r("Тип", TONE[c.type]) + r("Стихия", el) + r("Стадия", c.stage == null ? "" : (SLAB[String(c.stage)] || c.stage)) +
+    r("HP", c.health) + r("Слабость", c.weakness) + r("Отступление", c.retreatCost) + "</div></div></div>";
+  v.hidden = false;
 }
 
 /* ===== Паки: у сета бывает несколько паков (например Charizard / Mewtwo / Pikachu) ===== */
@@ -301,9 +367,9 @@ function cf() {
   return cards.filter(c => (!st.set || c.set === st.set) && (!q || c.name.toLowerCase().includes(q)) && (!pp || (c.set === pp[0] && (c.packs || []).includes(pp.slice(1).join("|")))));
 }
 function tile(c) {
-  return '<button class="card' + (owned.has(cid(c)) ? " on" : "") + '" data-id="' + cid(c) + '">' +
-    '<span class="im"><img loading="lazy" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)"></span>' +
-    '<span class="nm">' + esc(c.name) + '</span><span class="no">' + c.set + " · " + c.number + " · " + c.rarity + "</span></button>";
+  return '<div class="card' + (owned.has(cid(c)) ? " on" : "") + '" data-id="' + cid(c) + '">' +
+    '<span class="im"><img loading="lazy" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)"><button class="ck" aria-label="Отметить">' + (owned.has(cid(c)) ? "✓" : "") + '</button></span>' +
+    '<span class="nm">' + esc(c.name) + '</span><span class="no">' + c.set + " · " + c.number + " · " + c.rarity + "</span></div>";
 }
 function setSelect(id, val, withAll) {
   return '<select id="' + id + '">' + (withAll ? '<option value="">Все сеты</option>' : "") +
@@ -315,10 +381,10 @@ function build() {
   const m = $("#main");
   if (tab === "cards") {
     const po = packOpts();
-    m.innerHTML = '<div class="bar">' + setSelect("fset", st.set, true) +
+    m.innerHTML = '<div class="tb"><div class="bar">' + setSelect("fset", st.set, true) +
       (po.length ? '<select id="fpack"><option value="">Все паки</option>' + po.map(x => '<option value="' + esc(x[0]) + '"' + (st.pack === x[0] ? " selected" : "") + ">" + esc(x[1]) + "</option>").join("") + "</select>" : "") +
       '<input id="fq" type="search" placeholder="Поиск по имени" value="' + esc(st.q) + '">' +
-      '<div class="seg" id="fshow">' + [["all", "Все"], ["have", "Есть"], ["miss", "Нет"]].map(x => '<button data-v="' + x[0] + '"' + (st.show === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div></div>" +
+      '<div class="seg" id="fshow">' + [["all", "Все"], ["have", "Есть"], ["miss", "Нет"]].map(x => '<button data-v="' + x[0] + '"' + (st.show === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div></div></div>" +
       '<div class="prog" id="prog"></div><div class="grid" id="body"></div>';
     $("#fset").onchange = e => { st.set = e.target.value; st.pack = ""; build(); };
     if ($("#fpack")) $("#fpack").onchange = e => { st.pack = e.target.value; draw(); };
@@ -336,11 +402,11 @@ function build() {
       m.innerHTML = '<p class="empty">Не удалось загрузить список покемонов. Нужен интернет при первом запуске, обнови страницу.</p>';
     } else {
       const opt = (arr, cur) => arr.map(x => '<option value="' + x[0] + '"' + (String(cur) === String(x[0]) ? " selected" : "") + ">" + x[1] + "</option>").join("");
-      m.innerHTML = '<div class="bar"><input id="fq" type="search" placeholder="Поиск по имени или номеру" value="' + esc(st.q) + '"></div>' +
+      m.innerHTML = '<div class="tb"><div class="bar"><input id="fq" type="search" placeholder="Поиск по имени или номеру" value="' + esc(st.q) + '"></div>' +
         '<div class="bar"><select id="fgen">' + opt([["", "Все поколения"]].concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(g => [g, "Поколение " + g])), st.gen) + "</select>" +
         '<button class="fav' + (st.favOnly ? " on" : "") + '" id="ffav">♥ Избранные</button>' +
         '<select id="fflt">' + opt([["all", "Все"], ["have", "Есть карты"], ["none", "Нет карт"], ["full", "Собрано"], ["tcg", "Есть в TCG Pocket"]], st.flt) + "</select>" +
-        '<select id="fsort">' + opt([["num", "По номеру"], ["name", "По имени"], ["prog", "По прогрессу"]], st.sort) + '</select></div><div id="body"></div>';
+        '<select id="fsort">' + opt([["num", "По номеру"], ["name", "По имени"], ["prog", "По прогрессу"]], st.sort) + '</select></div></div><div id="body"></div>';
       $("#fq").oninput = e => { st.q = e.target.value; draw(); };
       $("#fgen").onchange = e => { st.gen = e.target.value; draw(); };
       $("#fflt").onchange = e => { st.flt = e.target.value; draw(); };
@@ -351,13 +417,16 @@ function build() {
     m.innerHTML = '<div id="body"></div>';
   } else {
     if (!st.mset && sets.length) st.mset = (sets.find(x => MIS[x.code.toLowerCase()]) || sets[0]).code;
-    m.innerHTML = '<div class="bar">' + setSelect("fset", st.mset, false) +
-      '<div class="seg" id="fsec"><button data-v="0"' + (!st.secret ? ' class="on"' : '') + '>Обычные</button><button data-v="1"' + (st.secret ? ' class="on"' : '') + '>Секретные</button></div></div><div id="body"></div>';
+    m.innerHTML = '<div class="tb"><div class="bar">' + setSelect("fset", st.mset, false) +
+      '<div class="seg" id="fsec"><button data-v="0"' + (!st.secret ? ' class="on"' : '') + '>Обычные</button><button data-v="1"' + (st.secret ? ' class="on"' : '') + '>Секретные</button></div></div></div><div id="body"></div>';
     $("#fset").onchange = e => { st.mset = e.target.value; draw(); };
     $("#fsec").onclick = e => { const v = e.target.dataset.v; if (v) { st.secret = v === "1"; build(); } };
   }
   draw();
+  setHH();
 }
+function setHH() { const h = document.querySelector("header"), de = document.documentElement; if (h && h.offsetHeight && de && de.style) de.style.setProperty("--hh", h.offsetHeight + "px"); }
+window.addEventListener("resize", setHH);
 
 function draw() {
   const body = $("#body"), q = st.q.trim().toLowerCase();
@@ -424,6 +493,7 @@ function draw() {
   }
 }
 
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeCard(); });
 document.addEventListener("click", e => {
   const mv = e.target.closest("[data-mv]");
   const fd = !mv && e.target.closest("[data-fold]");
@@ -435,16 +505,12 @@ document.addEventListener("click", e => {
   if (pk) { st.scroll = window.scrollY || 0; st.open = +pk.dataset.d; build(); window.scrollTo(0, 0); return; }
   if (e.target.closest("#back")) { st.open = 0; build(); window.scrollTo(0, st.scroll || 0); return; }
   if (e.target.closest("#hrt")) { fav.has(st.open) ? fav.delete(st.open) : fav.add(st.open); saveFav(); build(); return; }
+  const ck = e.target.closest(".ck");
+  if (ck) { toggleCard(ck.closest(".card").dataset.id); return; }
+  if (e.target.closest("#cvback")) { closeCard(); return; }
+  if (e.target.closest("#cvck")) { toggleCard(st.cardOpen); return; }
   const b = e.target.closest(".card"); if (!b) return;
-  const i = b.dataset.id;
-  owned.has(i) ? owned.delete(i) : owned.add(i);
-  save();
-  if (tab === "cards" && st.show === "all") {
-    document.querySelectorAll('[data-id="' + i + '"]').forEach(x => x.classList.toggle("on", owned.has(i)));
-    const l = cf();
-    const h = l.filter(c => owned.has(cid(c))).length;
-    $("#prog").innerHTML = "Собрано " + h + " из " + l.length + meter(h, l.length);
-  } else draw();
+  openCard(b.dataset.id);
 });
 $("#nav").onclick = e => {
   const t = e.target.dataset.t; if (!t) return;
