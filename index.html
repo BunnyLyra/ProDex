@@ -72,7 +72,7 @@ input{flex:1;min-width:140px}
 <body>
 <header>
   <div id="info" style="font-size:12px;color:var(--mt);float:right;margin-top:6px"></div>
-  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v15</small></h1>
+  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v16</small></h1>
   <nav id="nav">
     <button data-t="cards" class="on">Карточки</button>
     <button data-t="species">Покемоны</button>
@@ -230,7 +230,7 @@ let mstate = {};
 try { mstate = JSON.parse(localStorage.getItem(MKEY) || "{}") || {}; } catch (e) {}
 const saveM = () => { try { localStorage.setItem(MKEY, JSON.stringify(mstate)); } catch (e) {} };
 const mid = (k, x) => k + ":" + x.title;
-const RORD = ["C", "U", "R", "RR", "SR", "AR", "SAR", "IM", "S", "SSR", "UR"];
+const RORD = ["C", "U", "R", "RR", "SR", "AR", "SAR", "IM", "S", "SSR", "UR", "AN"];
 function cmpCard(a, b) {
   const ra = RORD.indexOf(a.rarity), rb = RORD.indexOf(b.rarity), x = ra < 0 ? 99 : ra, y = rb < 0 ? 99 : rb;
   if (x !== y) return x - y;
@@ -254,7 +254,7 @@ const matches = (c, f) => Object.keys(f).every(key => {
 });
 const nameCache = new Map();
 const nn = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
-function byPhrase(p) { if (!nameCache.has(p)) { const q = " " + nn(p) + " "; nameCache.set(p, cards.filter(c => (" " + nn(c.name) + " ").includes(q))); } return nameCache.get(p); }
+function byPhrase(p) { if (!nameCache.has(p)) { const q = " " + nn(p) + " "; nameCache.set(p, cards.filter(c => (" " + (c._n || (c._n = nn(c.name))) + " ").includes(q))); } return nameCache.get(p); }
 const gOk = g => g.some(e => e[0] === "~" ? byPhrase(e.slice(1)).some(c => owned.has(cid(c))) : owned.has(e));
 function mst(k, x) {
   if (x.groups) { const h = x.groups.filter(gOk).length, t = x.need || x.groups.length; return { h: Math.min(h, t), t, done: t > 0 && h >= t }; }
@@ -271,7 +271,14 @@ function drawStats(body) {
   const prow = [];
   sets.forEach(x => { if (/promo/i.test(x.code + " " + setName(x))) { const l = cards.filter(c => c.set === x.code); if (l.length) prow.push(row(setName(x), got(l), l.length)); return; } packsFor(x).forEach(pn => { const l = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn)); if (l.length) prow.push(row(setName(x) + " · " + pn, got(l), l.length)); }); });
   if (prow.length) out += '<section class="grp"><h3>Карточки по пакам</h3>' + prow.join("") + "</section>";
-  out += '<section class="grp"><h3>Карточки по редкости</h3>' + [...new Set(cards.map(c => c.rarity || "—"))].sort((a, b) => { const o = ["C", "U", "R", "RR", "SR", "AR", "SAR", "IM", "S", "SSR", "UR"], i = o.indexOf(a), j = o.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || a.localeCompare(b); }).map(r => { const l = cards.filter(c => (c.rarity || "—") === r); return row(r, got(l), l.length); }).join("") + "</section>";
+  out += '<section class="grp"><h3>Карточки по редкости</h3>' + [...new Set(cards.map(c => c.rarity || "—"))].sort((a, b) => { const i = RORD.indexOf(a), j = RORD.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || a.localeCompare(b); }).map(r => { const l = cards.filter(c => (c.rarity || "—") === r); return row(r, got(l), l.length); }).join("") + "</section>";
+  const grpBy = (fn, lab, order) => { const m = new Map(); cards.forEach(c => { const k = fn(c); if (k == null) return; if (!m.has(k)) m.set(k, []); m.get(k).push(c); }); return order.filter(k => m.has(k)).map(k => row(lab[k] || String(k), got(m.get(k)), m.get(k).length)).join(""); };
+  if (cards.some(c => c.type)) {
+    const ex = cards.filter(c => c.poke && / ex$/i.test(c.name));
+    out += '<section class="grp"><h3>Карточки по типам</h3>' + grpBy(c => c.type || null, { pokemon: "Покемоны", item: "Предметы", supporter: "Помощники", tool: "Инструменты", stadium: "Стадионы" }, ["pokemon", "item", "supporter", "tool", "stadium"]) + (ex.length ? row("из них покемоны ex", got(ex), ex.length) : "") + "</section>";
+    out += '<section class="grp"><h3>Покемоны по стихиям</h3>' + grpBy(c => c.element || null, { grass: "Трава", fire: "Огонь", water: "Вода", lightning: "Молния", psychic: "Психика", fighting: "Борьба", darkness: "Тьма", metal: "Металл", dragon: "Дракон", colorless: "Бесцветные" }, ["grass", "fire", "water", "lightning", "psychic", "fighting", "darkness", "metal", "dragon", "colorless"]) + "</section>";
+    out += '<section class="grp"><h3>Покемоны по стадиям</h3>' + grpBy(c => c.stage == null ? null : String(c.stage), { basic: "Базовые", "1": "1 стадия", "2": "2 стадия" }, ["basic", "1", "2"]) + "</section>";
+  }
   const ms = []; Object.keys(MIS).forEach(k => MIS[k].forEach(x => ms.push({ k, x, s: mst(k, x) })));
   if (ms.length) {
     const d = f => ms.filter(o => f(o) && o.s.done).length, n = f => ms.filter(f).length;
