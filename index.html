@@ -67,9 +67,9 @@ input{flex:1;min-width:140px}
 .mv{border:1px solid var(--ln);background:none;color:var(--mt);border-radius:10px;padding:4px 12px;font:inherit;font-size:18px;line-height:1.2}.mh{cursor:pointer;align-items:center;gap:8px}.mh .mt{flex:1;color:var(--tx);font-weight:700;font-size:16px}.mh .chev{color:var(--mt);width:14px;font-size:14px}
 .tb{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hh,100px));z-index:4;background:var(--bg);margin:0 -14px;padding:8px 14px 2px}
 .tb .bar{margin-bottom:6px}
-.card .ck{position:absolute;right:5px;bottom:5px;width:26px;height:26px;padding:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.6);background:rgba(0,0,0,.2);color:#fff;font-size:14px;line-height:1;opacity:.65;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.card .ck{position:absolute;right:3px;bottom:3px;width:30px;height:30px;padding:0;border:0;background:none;color:transparent;font-size:18px;line-height:1;text-shadow:0 0 3px rgba(0,0,0,.55)}
 .card .ck::before{content:"";position:absolute;inset:-8px}
-.card.on .ck{background:rgba(42,157,106,.55);border-color:rgba(255,255,255,.85);opacity:.9}
+.card.on .ck{color:rgba(255,255,255,.6)}
 #cv{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 30px}
 #cv[hidden]{display:none}
 .cvw{display:flex;gap:16px;flex-wrap:wrap;max-width:1000px;margin:0 auto;align-items:flex-start}
@@ -77,7 +77,7 @@ input{flex:1;min-width:140px}
 .panel{background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:14px;margin-bottom:12px}
 .cvimg{width:100%;display:block;border-radius:12px;aspect-ratio:367/512;object-fit:cover}
 .cvt{font-size:20px;font-weight:700;margin-top:10px}
-.crow{display:flex;align-items:center;gap:12px;font-size:17px}.crow input{width:22px;height:22px;flex:none;padding:0}
+.panel.sm{display:inline-block;padding:8px 14px;min-width:190px}.crow{display:flex;align-items:center;gap:10px;font-size:15px}.crow input{width:18px;height:18px;flex:none;padding:0}
 .irow{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--ln)}.irow:last-child{border-bottom:0}.irow span{color:var(--mt)}.irow b{text-align:right;font-weight:600}
 .hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
 .hc{background:var(--sf);border:1px solid var(--ln);border-radius:18px;padding:16px}.hc small{color:var(--mt);font-size:13px}.hc .big{font-size:36px;font-weight:800;line-height:1.1;margin:2px 0}.hc .sub{color:var(--mt);font-size:13px}
@@ -92,7 +92,7 @@ input{flex:1;min-width:140px}
 <body>
 <header>
   <div id="info" style="font-size:12px;color:var(--mt);float:right;margin-top:6px"></div>
-  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v17</small></h1>
+  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v18</small></h1>
   <nav id="nav">
     <button data-t="cards" class="on">Карточки</button>
     <button data-t="species">Покемоны</button>
@@ -348,10 +348,10 @@ function renderCard() {
   v.innerHTML = '<div class="cvw"><div class="cvl"><button class="more" id="cvback" style="margin:0 0 10px">← Назад</button><div class="panel">' +
     '<img class="cvimg" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)">' +
     '<div class="cvt">' + esc(c.name) + '</div><div class="prog" style="margin:0">' + c.number + " · " + esc(s ? setName(s) : c.set) + "</div></div></div>" +
-    '<div class="cvr"><div class="panel"><label class="crow"><input type="checkbox" id="cvck"' + (own ? " checked" : "") + "><span>В коллекции</span></label></div>" +
+    '<div class="cvr"><div class="panel sm"><label class="crow"><input type="checkbox" id="cvck"' + (own ? " checked" : "") + "><span>В коллекции</span></label></div>" +
     '<div class="panel">' + r("Сет", (s ? setName(s) + " · " : "") + c.set) + r("Номер", c.number + " / " + total) + r("Пак", (c.packs || []).join(", ") || "—") +
     r("Редкость", RNAME[c.rarity] ? c.rarity + " · " + RNAME[c.rarity] : c.rarity) + r("Тип", TONE[c.type]) + r("Стихия", el) + r("Стадия", c.stage == null ? "" : (SLAB[String(c.stage)] || c.stage)) +
-    r("HP", c.health) + r("Слабость", c.weakness) + r("Отступление", c.retreatCost) + "</div></div></div>";
+    r("HP", c.health) + r("Слабость", c.weakness) + "</div></div></div>";
   v.hidden = false;
 }
 
