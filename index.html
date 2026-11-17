@@ -87,12 +87,18 @@ input{flex:1;min-width:140px}
 .at{flex:1;min-width:0}.at b{display:block;font-size:16px}.at small{color:var(--mt)}
 .chv{color:var(--mt);font-size:24px;transition:transform .15s}.acc[open] .chv{transform:rotate(90deg)}
 .accb{padding:0 14px 8px;border-top:1px solid var(--ln)}
+.qb{position:absolute;left:5px;bottom:4px;font-size:13px;font-weight:700;color:#fff;text-shadow:0 0 3px #000;opacity:.85}
+.stp{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}.stp b{min-width:20px;text-align:center}
+.stp button,.qty button{width:28px;height:28px;border-radius:50%;border:1px solid var(--ln);background:var(--bg);color:var(--tx);padding:0;font-size:16px;line-height:1}
+.qty{display:flex;align-items:center;gap:8px;margin-left:12px}.qty b{min-width:22px;text-align:center}
+.gs{display:inline-block;line-height:1;font-family:-apple-system,"Segoe UI Symbol","Apple Symbols",sans-serif;font-size:1.1em;vertical-align:-0.02em;transform:translateY(-0.14em)}
+.pk .nm{line-height:1.5}
 </style>
 </head>
 <body>
 <header>
   <div id="info" style="font-size:12px;color:var(--mt);float:right;margin-top:6px"></div>
-  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v18</small></h1>
+  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v22</small></h1>
   <nav id="nav">
     <button data-t="cards" class="on">Карточки</button>
     <button data-t="species">Покемоны</button>
@@ -150,9 +156,10 @@ window.imgOk = el => { pref = +(el.dataset.k || 0); };
 /* Миссии лежат в файле missions.js (он должен быть рядом с index.html) */
 const MISSIONS = window.MISSIONS || {};
 let MIS = {};
+const VER = new Set();
 const CODE_LIST = [["Genetic Apex", "A1"], ["Mythical Island", "A1a"], ["Space-Time Smackdown", "A2"], ["Triumphant Light", "A2a"], ["Shining Revelry", "A2b"], ["Celestial Guardians", "A3"], ["Extradimensional Crisis", "A3a"], ["Eevee Grove", "A3b"], ["Wisdom of Sea and Sky", "A4"], ["Secluded Springs", "A4a"], ["Deluxe Pack: ex", "A4b"], ["Mega Rising", "B1"], ["Crimson Blaze", "B1a"], ["Fantastical Parade", "B2"], ["Paldean Wonders", "B2a"], ["Mega Shine", "B2b"], ["Pulsing Aura", "B3"], ["Paradox Drive", "B3a"], ["Everyday Wonders", "B3b"], ["Ruler of the Skies", "B4"], ["Team Rocket's Ambition", "B4a"], ["Deluxe Pack: Mega", "B4b"], ["Dual Fusion", "C1"]];
 function buildMIS() {
-  MIS = {};
+  MIS = {}; VER.clear();
   const CODE_BY_NAME = {}; CODE_LIST.forEach(x => { CODE_BY_NAME[norm(x[0])] = x[1]; });
   const byName = new Map(sets.map(x => [norm(setName(x)), x.code]));
   Object.keys(MISSIONS).forEach(key => {
@@ -160,9 +167,10 @@ function buildMIS() {
     const code = byName.get(norm(key)) || (sets.find(x => x.code === want) || {}).code;
     if (!code) return;
     const lc = code.toLowerCase();
+    if ((window.VERIFIED || []).includes(key)) VER.add(lc);
     MIS[lc] = MISSIONS[key].map(m => {
       const x = Object.assign({}, m);
-      if (m.groups) x.groups = m.groups.map(g => g.map(e => typeof e === "number" ? lc + "-" + e : String(e).toLowerCase()));
+      if (m.groups) { const cv = e => typeof e === "number" ? lc + "-" + e : String(e).toLowerCase(); x.groups = m.groups.map(g => Array.isArray(g) ? g.map(cv) : Object.assign({}, g, { p: g.p ? g.p.map(cv) : undefined, sl: g.sl ? g.sl.map(sl => sl.map(cv)) : undefined, f: g.f ? Object.assign({ set: code }, g.f) : undefined, set: g.dx ? lc : undefined })); }
       if (m.inset) x.filter = Object.assign({}, m.filter || {}, { set: code });
       return x;
     });
@@ -238,11 +246,12 @@ function indexSpecies() {
   cards.forEach(c => { if (!c.type) c.poke = speciesOf(c.name) > 0 && !TW.test(c.name); if (!c.poke) return; const id = speciesOf(c.name); if (id) { if (!spMap.has(id)) spMap.set(id, []); spMap.get(id).push(c); } });
 }
 const prog = d => { const l = spMap.get(d.id) || []; return { h: l.filter(c => owned.has(cid(c))).length, t: l.length }; };
+const escG = t => esc(t).replace(/[♀♂]/g, m => '<span class="gs">' + m + "</span>");
 function pkTile(d) {
   const p = prog(d);
   return '<button class="pk' + (p.t ? "" : " none") + (p.t && p.h === p.t ? " full" : "") + '" data-d="' + d.id + '">' + (fav.has(d.id) ? '<span class="hr">♥</span>' : "") +
     '<img loading="lazy" alt="" src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)">' +
-    '<span class="nm">' + esc(d.name) + '</span><span class="no">#' + d.id + '</span><span class="br"><i style="width:' + (p.t ? Math.round(p.h / p.t * 100) : 0) + '%"></i></span></button>';
+    '<span class="nm">' + escG(d.name) + '</span><span class="no">#' + d.id + '</span><span class="br"><i style="width:' + (p.t ? Math.round(p.h / p.t * 100) : 0) + '%"></i></span></button>';
 }
 
 /* ===== Миссии: список карточек, условие (авто) или ручной счётчик ===== */
@@ -273,17 +282,49 @@ try { secOv = JSON.parse(localStorage.getItem(SKEY) || "{}") || {}; } catch (e) 
 const saveSec = () => { try { localStorage.setItem(SKEY, JSON.stringify(secOv)); } catch (e) {} };
 const isSec = (k, x) => { const v = secOv[mid(k, x)]; return v === undefined ? !!x.secret : !!v; };
 const pct = (h, t) => t ? Math.round(h / t * 100) : 0;
+const QKEY = "tcgp-qty-v1";
+let copies = {};
+try { copies = JSON.parse(localStorage.getItem(QKEY) || "{}") || {}; } catch (e) {}
+const saveQ = () => { try { localStorage.setItem(QKEY, JSON.stringify(copies)); } catch (e) {} };
+const qty = i => owned.has(i) ? (copies[i] || 1) : 0;
+function setQty(i, n) { n = Math.max(0, Math.min(999, n | 0)); if (n <= 0) { owned.delete(i); delete copies[i]; } else { owned.add(i); if (n === 1) delete copies[i]; else copies[i] = n; } save(); saveQ(); }
 const matches = (c, f) => Object.keys(f).every(key => {
-  const v = f[key], cv = String(c[key] == null ? "" : c[key]).toLowerCase();
-  if (key === "name") return (Array.isArray(v) ? v : [v]).some(y => cv.includes(String(y).toLowerCase()));
-  return (Array.isArray(v) ? v : [v]).some(y => String(y).toLowerCase() === cv);
+  const v = f[key], vals = (Array.isArray(v) ? v : [v]).map(y => String(y).toLowerCase());
+  if (key === "element") return [c.element, c.element2].some(e => e && vals.includes(String(e).toLowerCase()));
+  const cv = String(c[key] == null ? "" : c[key]).toLowerCase();
+  if (key === "name") return vals.some(y => cv.includes(y));
+  return vals.includes(cv);
 });
 const nameCache = new Map();
 const nn = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
 function byPhrase(p) { if (!nameCache.has(p)) { const q = " " + nn(p) + " "; nameCache.set(p, cards.filter(c => (" " + (c._n || (c._n = nn(c.name))) + " ").includes(q))); } return nameCache.get(p); }
-const gOk = g => g.some(e => e[0] === "~" ? byPhrase(e.slice(1)).some(c => owned.has(cid(c))) : owned.has(e));
+let idMap = null;
+const cardById = i => { if (!idMap || idMap.size !== cards.length) idMap = new Map(cards.map(c => [cid(c), c])); return idMap.get(i); };
+const reqOf = g => Array.isArray(g) ? { p: g, n: 1 } : g;
+function reqCards(r) {
+  if (r._cs) return r._cs;
+  const out = [], seen = new Set(), add = c => { const k = cid(c); if (!seen.has(k)) { seen.add(k); out.push(c); } };
+  (r.p || []).forEach(e => { if (e[0] === "~") byPhrase(e.slice(1)).forEach(add); else { const c = cardById(e); if (c) add(c); } });
+  (r.sl || []).forEach(sl => sl.forEach(e => { const c = cardById(e); if (c) add(c); }));
+  if (r.f) cards.forEach(c => { if (matches(c, r.f)) add(c); });
+  if (r.dx) for (let i = r.dx[0]; i <= r.dx[1]; i++) (spMap.get(i) || []).forEach(c => { if (c.set.toLowerCase() === r.set) add(c); });
+  return (r._cs = r.x ? out.filter(c => !r.x.some(y => c.name.toLowerCase().includes(y))) : out);
+}
+function rprog(r) {
+  const cs = reqCards(r);
+  if (r.dx) { const sl = []; for (let i = r.dx[0]; i <= r.dx[1]; i++) { const l = (spMap.get(i) || []).filter(c => c.set.toLowerCase() === r.set); if (l.length) sl.push(l); } const h = sl.filter(l => l.some(c => qty(cid(c)))).length; return { h, t: sl.length, cs }; }
+  const t = r.n || 1;
+  if (r.sl) return { h: Math.min(r.sl.filter(sl => sl.some(e => qty(e) > 0)).length, t), t, cs };
+  let h = 0; cs.forEach(c => { const q = qty(cid(c)); h += r.c ? q : (q ? 1 : 0); }); return { h: Math.min(h, t), t, cs };
+}
+const fdesc = f => (f.name ? "«" + f.name.trim() + "» " : "") + (f.element ? [].concat(f.element).map(e => ELAB[e] || e).join(" / ") + " " : "") + (f.type === "pokemon" ? "покемоны" : f.type ? (TLAB[f.type] || f.type).toLowerCase() : "карточки") + (f.rarity ? " (" + [].concat(f.rarity).join(", ") + ")" : "");
 function mst(k, x) {
-  if (x.groups) { const h = x.groups.filter(gOk).length, t = x.need || x.groups.length; return { h: Math.min(h, t), t, done: t > 0 && h >= t }; }
+  if (x.groups) {
+    const rs = x.groups.map(g => rprog(reqOf(g)));
+    if (x.need) { const h = rs.filter(r => r.h >= r.t).length; return { h: Math.min(h, x.need), t: x.need, done: h >= x.need }; }
+    const h = rs.reduce((a, r) => a + r.h, 0), t = rs.reduce((a, r) => a + r.t, 0);
+    return { h, t, done: t > 0 && rs.every(r => r.h >= r.t) };
+  }
   if (x.manual) { const t = x.need || 1, h = Math.min(+mstate[mid(k, x)] || 0, t); return { h, t, done: h >= t }; }
   if (x.filter) { const l = cards.filter(c => matches(c, x.filter)), h = l.filter(c => owned.has(cid(c))).length, t = x.need || l.length; return { h: Math.min(h, t), t, done: t > 0 && h >= t, n: l.length }; }
   const cl = x.cards || [], h = cl.filter(i => owned.has(i)).length, t = x.need || cl.length;
@@ -298,7 +339,7 @@ function drawStats(body) {
   const ms = []; Object.keys(MIS).forEach(k => MIS[k].forEach(x => ms.push({ k, x, s: mst(k, x) })));
   const md = ms.filter(o => o.s.done).length;
   let sp = 0, spT = 0; dex.forEach(d => { const p = prog(d); if (p.t) { spT++; if (p.h) sp++; } });
-  let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + "</div>";
+  let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length, "копий: " + cards.reduce((a, c) => a + qty(cid(c)), 0)) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + "</div>";
   const sw = sets.filter(x => cards.some(c => c.set === x.code));
   out += acc("🗂️", "Карточки по сетам", sw.length + " сетов", sw.map(x => { const l = cards.filter(c => c.set === x.code); return row(setName(x) + " (" + x.code + ")", got(l), l.length); }).join(""));
   const prow = [];
@@ -321,16 +362,20 @@ function drawStats(body) {
 }
 
 /* ===== Отметка карточки и страница карточки ===== */
-function toggleCard(i) {
-  owned.has(i) ? owned.delete(i) : owned.add(i);
-  save();
-  document.querySelectorAll('.card[data-id="' + i + '"]').forEach(x => { x.classList.toggle("on", owned.has(i)); const k = x.querySelector ? x.querySelector(".ck") : null; if (k) k.textContent = owned.has(i) ? "✓" : ""; });
+function afterChange(i) {
+  const q = qty(i);
+  document.querySelectorAll('.card[data-id="' + i + '"]').forEach(x => {
+    x.classList.toggle("on", q > 0);
+    const f = sel => x.querySelector ? x.querySelector(sel) : null, k = f(".ck"), b = f(".qb"), z = f(".stp b");
+    if (k) k.textContent = q > 0 ? "✓" : ""; if (b) b.textContent = q > 1 ? "×" + q : ""; if (z) z.textContent = q;
+  });
   if (tab === "cards" && st.show === "all") {
     const l = cf(), h = l.filter(c => owned.has(cid(c))).length;
     $("#prog").innerHTML = "Собрано " + h + " из " + l.length + meter(h, l.length);
   } else draw();
   if (st.cardOpen) renderCard();
 }
+const toggleCard = i => { setQty(i, qty(i) ? 0 : 1); afterChange(i); };
 function openCard(i) {
   st.cardOpen = i; renderCard();
   if (document.body && document.body.style) document.body.style.overflow = "hidden";
@@ -348,7 +393,7 @@ function renderCard() {
   v.innerHTML = '<div class="cvw"><div class="cvl"><button class="more" id="cvback" style="margin:0 0 10px">← Назад</button><div class="panel">' +
     '<img class="cvimg" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)">' +
     '<div class="cvt">' + esc(c.name) + '</div><div class="prog" style="margin:0">' + c.number + " · " + esc(s ? setName(s) : c.set) + "</div></div></div>" +
-    '<div class="cvr"><div class="panel sm"><label class="crow"><input type="checkbox" id="cvck"' + (own ? " checked" : "") + "><span>В коллекции</span></label></div>" +
+    '<div class="cvr"><div class="panel sm"><div class="crow"><input type="checkbox" id="cvck"' + (own ? " checked" : "") + '><span>В коллекции</span><span class="qty"><button id="cvm">−</button><b>' + qty(id) + '</b><button id="cvp">+</button></span></div></div>' +
     '<div class="panel">' + r("Сет", (s ? setName(s) + " · " : "") + c.set) + r("Номер", c.number + " / " + total) + r("Пак", (c.packs || []).join(", ") || "—") +
     r("Редкость", RNAME[c.rarity] ? c.rarity + " · " + RNAME[c.rarity] : c.rarity) + r("Тип", TONE[c.type]) + r("Стихия", el) + r("Стадия", c.stage == null ? "" : (SLAB[String(c.stage)] || c.stage)) +
     r("HP", c.health) + r("Слабость", c.weakness) + "</div></div></div>";
@@ -366,10 +411,12 @@ function cf() {
   const q = st.q.trim().toLowerCase(), pp = st.pack ? st.pack.split("|") : null;
   return cards.filter(c => (!st.set || c.set === st.set) && (!q || c.name.toLowerCase().includes(q)) && (!pp || (c.set === pp[0] && (c.packs || []).includes(pp.slice(1).join("|")))));
 }
-function tile(c) {
-  return '<div class="card' + (owned.has(cid(c)) ? " on" : "") + '" data-id="' + cid(c) + '">' +
-    '<span class="im"><img loading="lazy" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)"><button class="ck" aria-label="Отметить">' + (owned.has(cid(c)) ? "✓" : "") + '</button></span>' +
-    '<span class="nm">' + esc(c.name) + '</span><span class="no">' + c.set + " · " + c.number + " · " + c.rarity + "</span></div>";
+function tile(c, o) {
+  const id = cid(c), q = qty(id);
+  return '<div class="card' + (q ? " on" : "") + '" data-id="' + id + '">' +
+    '<span class="im"><img loading="lazy" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)"><button class="ck" aria-label="Отметить">' + (q ? "✓" : "") + '</button><span class="qb">' + (q > 1 ? "×" + q : "") + "</span></span>" +
+    '<span class="nm">' + esc(c.name) + '</span><span class="no">' + c.set + " · " + c.number + " · " + c.rarity + "</span>" +
+    (o && o.stp ? '<span class="stp"><button data-q="-">−</button><b>' + q + '</b><button data-q="+">+</button></span>' : "") + "</div>";
 }
 function setSelect(id, val, withAll) {
   return '<select id="' + id + '">' + (withAll ? '<option value="">Все сеты</option>' : "") +
@@ -396,7 +443,7 @@ function build() {
       const f = fav.has(d.id);
       m.innerHTML = '<button class="more" id="back" style="margin:0 0 10px">← Назад</button>' +
         '<div class="dhead"><img src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)" alt="">' +
-        '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + esc(d.name) + ' <span class="prog">#' + d.id + '</span></div><div class="prog" id="dprog"></div></div>' +
+        '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + escG(d.name) + ' <span class="prog">#' + d.id + '</span></div><div class="prog" id="dprog"></div></div>' +
         '<button class="heart' + (f ? " on" : "") + '" id="hrt">' + (f ? "♥" : "♡") + '</button></div><div class="grid" id="body"></div>';
     } else if (!dex.length) {
       m.innerHTML = '<p class="empty">Не удалось загрузить список покемонов. Нужен интернет при первом запуске, обнови страницу.</p>';
@@ -474,19 +521,21 @@ function draw() {
       if (x.manual) inner = x.need > 1 ? '<div class="mctl"><button' + at + ' data-a="-">−</button><b>' + s.h + " / " + s.t + "</b><button" + at + ' data-a="+">+</button></div>' :
         '<button class="fav' + (s.done ? " on" : "") + '"' + at + ' data-a="t">' + (s.done ? "✓ Выполнено" : "Отметить выполненной") + "</button>";
       else if (x.groups) inner = '<div class="grid">' + x.groups.map(g => {
-        const cs = []; g.forEach(e => { if (e[0] === "~") byPhrase(e.slice(1)).slice(0, 8).forEach(c => cs.push(c)); else if (byId.get(e)) cs.push(byId.get(e)); });
+        const r = reqOf(g), p = rprog(r), cs = p.cs;
         if (!cs.length) return "";
-        if (g.length === 1 && g[0][0] !== "~") return tile(cs[0]);
-        return '<div class="og"><div class="ol">' + (gOk(g) ? "✓ " : "") + 'любая из этих:</div><div class="grid">' + cs.map(tile).join("") + "</div></div>";
+        if (cs.length === 1 && !r.f && !r.sl && !r.dx && p.t === 1 && !r.c) return tile(cs[0]);
+        const parts = []; if (r.lb) parts.push(r.lb); else if (r.f) parts.push("любые " + fdesc(r.f) + " (" + cs.length + ")"); else if (r.sl) parts.push("разные карточки из списка"); else if (cs.length > 1) parts.push("любая из этих"); if (r.x) parts.push("кроме: " + r.x.join(", "));
+        if (r.c) parts.push("нужно копий: " + p.t); else if (p.t > 1) parts.push("нужно разных: " + p.t);
+        return '<div class="og"><div class="ol">' + (p.h >= p.t ? "✓ " : "") + esc(parts.join(" · ")) + " · " + p.h + " / " + p.t + '</div><div class="grid">' + cs.slice(0, 48).map(c => tile(c, { stp: !!r.c })).join("") + (cs.length > 48 ? '<p class="prog">…и ещё ' + (cs.length - 48) + "</p>" : "") + "</div></div>";
       }).join("") + "</div>";
       else if (x.filter) inner = '<p class="prog" style="margin:0">Считается автоматически по твоей коллекции. Подходящих карточек: ' + s.n + "</p>";
       else inner = '<div class="grid">' + x.cards.map(i => byId.get(i)).filter(Boolean).map(tile).join("") + "</div>";
-      const col = foldOv[mid(k, x)] !== undefined ? foldOv[mid(k, x)] : s.done;
+      const col = foldOv[mid(k, x)] !== undefined ? foldOv[mid(k, x)] : true;
       return '<section class="grp' + (s.done ? " done" : "") + '"><h3 class="mh" data-fold="' + k + "|" + o.i + '"><span class="chev">' + (col ? "▸" : "▾") + '</span><span class="mt">' + (s.done ? "✓ " : "") + esc(x.title) + "</span><span>" + s.h + " / " + s.t + '</span><button class="mv" data-mv="' + k + "|" + o.i + '">' + (isSec(k, x) ? "←" : "→") + "</button></h3>" +
-        ((x.manual && x.need > 1) || x.filter || x.need ? meter(s.h, s.t) : "") +
+        (s.t > 1 ? meter(s.h, s.t) : "") +
         (col ? "" : (x.reward ? '<p class="prog" style="margin:6px 0 0">Награда: ' + esc(x.reward) + "</p>" : "") + (x.note ? '<p class="prog" style="margin:6px 0 0">' + esc(x.note) + "</p>" : "") + (x.guess ? '<p class="prog" style="margin:6px 0 0">⚠ Состав восстановлен по неполному тексту источника, сверь с игрой.</p>' : "") + '<div style="margin-top:10px">' + inner + "</div>") + "</section>";
     };
-    body.innerHTML = items.length ? '<div class="prog">Выполнено миссий: ' + fin.length + " из " + items.length + " (" + pct(fin.length, items.length) + "%)" + meter(fin.length, items.length) + "</div>" +
+    body.innerHTML = items.length ? '<p class="prog" style="margin:0 0 6px">' + (VER.has(k) ? "Деление на секретные и обычные в этом сете проверено." : "Деление на секретные и обычные в этом сете не проверено: если в игре иначе, перенеси миссию стрелкой.") + '</p><div class="prog">Выполнено миссий: ' + fin.length + " из " + items.length + " (" + pct(fin.length, items.length) + "%)" + meter(fin.length, items.length) + "</div>" +
       active.map(one).join("") + (fin.length ? '<div class="gh" style="font-size:17px">Выполнено <span>' + fin.length + "</span></div>" + fin.map(one).join("") : "") +
       '<p class="prog">В игре некоторые миссии засчитывают любую версию карты, поэтому сверяйся с самой миссией.</p>' :
       '<p class="empty">Для этого сета пока нет ' + (st.secret ? "секретных" : "обычных") + " миссий. Они хранятся в файле missions.js.</p>";
@@ -497,7 +546,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeCard();
 document.addEventListener("click", e => {
   const mv = e.target.closest("[data-mv]");
   const fd = !mv && e.target.closest("[data-fold]");
-  if (fd) { const p = fd.dataset.fold.split("|"), x = MIS[p[0]][+p[1]], id = mid(p[0], x), cur = foldOv[id] !== undefined ? foldOv[id] : mst(p[0], x).done; foldOv[id] = !cur; saveFold(); draw(); return; }
+  if (fd) { const p = fd.dataset.fold.split("|"), x = MIS[p[0]][+p[1]], id = mid(p[0], x), cur = foldOv[id] !== undefined ? foldOv[id] : true; foldOv[id] = !cur; saveFold(); draw(); return; }
   if (mv) { const p = mv.dataset.mv.split("|"), x = MIS[p[0]][+p[1]]; secOv[mid(p[0], x)] = !isSec(p[0], x); saveSec(); draw(); return; }
   const mb = e.target.closest("[data-mk]");
   if (mb) { const k = mb.dataset.mk, x = MIS[k][+mb.dataset.mi], id = mid(k, x), a = mb.dataset.a, cur = +mstate[id] || 0, mx = x.need || 1; mstate[id] = a === "+" ? Math.min(cur + 1, mx) : a === "-" ? Math.max(0, cur - 1) : (cur ? 0 : 1); saveM(); draw(); return; }
@@ -505,6 +554,10 @@ document.addEventListener("click", e => {
   if (pk) { st.scroll = window.scrollY || 0; st.open = +pk.dataset.d; build(); window.scrollTo(0, 0); return; }
   if (e.target.closest("#back")) { st.open = 0; build(); window.scrollTo(0, st.scroll || 0); return; }
   if (e.target.closest("#hrt")) { fav.has(st.open) ? fav.delete(st.open) : fav.add(st.open); saveFav(); build(); return; }
+  const sq = e.target.closest("[data-q]");
+  if (sq) { const id = sq.closest(".card").dataset.id; setQty(id, qty(id) + (sq.dataset.q === "+" ? 1 : -1)); afterChange(id); return; }
+  if (e.target.closest("#cvm")) { setQty(st.cardOpen, qty(st.cardOpen) - 1); afterChange(st.cardOpen); return; }
+  if (e.target.closest("#cvp")) { setQty(st.cardOpen, qty(st.cardOpen) + 1); afterChange(st.cardOpen); return; }
   const ck = e.target.closest(".ck");
   if (ck) { toggleCard(ck.closest(".card").dataset.id); return; }
   if (e.target.closest("#cvback")) { closeCard(); return; }
