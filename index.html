@@ -100,12 +100,13 @@ input{flex:1;min-width:140px}
 .ctl .qty{margin:0;padding:0 14px;border-left:1px solid var(--ln);border-right:1px solid var(--ln)}
 .gt{margin-top:8px;font-weight:700}.ind{padding-left:12px;border-left:2px solid var(--ln);margin-left:2px}.bk{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}.bk .more{margin:0}
 @media(max-width:480px){.rb{width:36px;height:36px;font-size:18px}.ctl .qty{padding:0 8px}.panel.sm.ctl{gap:8px 10px}}
+.note{background:var(--sf);border:1px solid #e8a900;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:14px}
 </style>
 </head>
 <body>
 <header>
   <div id="info" style="font-size:12px;color:var(--mt);float:right;margin-top:6px"></div>
-  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v24</small></h1>
+  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v25</small></h1>
   <nav id="nav">
     <button data-t="cards" class="on">Карточки</button>
     <button data-t="species">Покемоны</button>
@@ -116,7 +117,7 @@ input{flex:1;min-width:140px}
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
 
 <div id="cv" hidden></div>
-<script src="missions.js?v=24"></script>
+<script src="missions.js?v=25"></script>
 <script>
 /* Данные и картинки берутся из репозитория flibustier/pokemon-tcg-pocket-database */
 const PKG = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database";
@@ -270,8 +271,8 @@ const TLAB = { pokemon: "Покемоны", item: "Предметы", supporter:
 const TONE = { pokemon: "Покемон", item: "Предмет", supporter: "Тренер", tool: "Инструмент", stadium: "Стадион" };
 const ELAB = { grass: "Трава", fire: "Огонь", water: "Вода", lightning: "Молния", psychic: "Психо", fighting: "Боевые", darkness: "Тьма", metal: "Металл", dragon: "Дракон", colorless: "Обычный" };
 const SLAB = { basic: "Базовые", "1": "1 стадия", "2": "2 стадия" };
-const RNAME = { C: "Common", U: "Uncommon", R: "Rare", RR: "Double Rare", AR: "Art Rare", SR: "Super Rare", SAR: "Special Art Rare", IM: "Immersive Rare", UR: "Crown Rare", S: "Shiny", SSR: "Shiny Super" };
-const RORD = ["C", "U", "R", "RR", "SR", "AR", "SAR", "IM", "S", "SSR", "UR", "AN"];
+const RNAME = { C: "Common", U: "Uncommon", R: "Rare", RR: "Double Rare", AR: "Art Rare", SR: "Super Rare", SAR: "Special Art Rare", IM: "Immersive Rare", UR: "Crown Rare", S: "Shiny", SSR: "Shiny Super Rare" };
+const RORD = ["C", "U", "R", "RR", "AR", "SR", "SAR", "IM", "S", "SSR", "UR", "AN"];
 function cmpCard(a, b) {
   const ra = RORD.indexOf(a.rarity), rb = RORD.indexOf(b.rarity), x = ra < 0 ? 99 : ra, y = rb < 0 ? 99 : rb;
   if (x !== y) return x - y;
@@ -304,9 +305,11 @@ function migrateId(a, b) {
   if (copies[a] != null) { copies[b] = copies[a]; delete copies[a]; saveQ(); }
   let ch = false; [wish, alt].forEach(z => { if (z.has(a)) { z.delete(a); z.add(b); ch = true; } }); if (ch) saveFlags();
 }
+let dataFixes = [];
+function cleanName(n) { return String(n).replace(/\u00a0/g, " ").replace(/([a-zà-ÿ])([A-Z])/g, "$1 $2").replace(/'/g, "’").replace(/\s+/g, " ").trim().replace(/\s(EX|Ex)$/, " ex"); }
 function renumberNegatives() {   /* номера <= 0 (три Mew из SP1) ставим в конец набора: 28, 29, 30 */
   const mx = {}; cards.forEach(x => { if (x.number > 0) mx[x.set] = Math.max(mx[x.set] || 0, x.number); });
-  cards.filter(x => x.number <= 0).sort((a, b) => b.number - a.number).forEach(x => { const old = (x.set + "-" + x.number).toLowerCase(); x.number = mx[x.set] = (mx[x.set] || 0) + 1; migrateId(old, cid(x)); });
+  cards.filter(x => x.number <= 0).sort((a, b) => b.number - a.number).forEach(x => { const old = (x.set + "-" + x.number).toLowerCase(); const was = x.number; x.number = mx[x.set] = (mx[x.set] || 0) + 1; migrateId(old, cid(x)); dataFixes.push([x.set + " " + x.name, "номер " + was, "номер " + x.number]); });
 }
 const matches = (c, f) => Object.keys(f).every(key => {
   const v = f[key], vals = (Array.isArray(v) ? v : [v]).map(y => String(y).toLowerCase());
@@ -377,7 +380,7 @@ function drawStats(body) {
   if (cards.some(c => c.type)) {
     const ex = cards.filter(c => c.poke && / ex$/i.test(c.name));
     out += acc("🧩", "Карточки по типам", "покемоны и тренеры", grpBy(c => c.type || null, TLAB, ["pokemon", "item", "supporter", "tool", "stadium"]));
-    out += acc("🌱", "Покемоны по стадиям", "базовые, 1 и 2 стадия, ex", grpBy(c => c.stage == null ? null : String(c.stage), SLAB, ["basic", "1", "2"]) + (ex.length ? row("Покемоны ex", got(ex), ex.length) : ""));
+    out += acc("🌱", "Покемоны по стадиям", "базовые, 1 и 2 стадия, ex", '<p class="prog">Считаются карточки покемонов, каждая версия (арт) отдельно, семейства эволюций не объединяются. Ex-карточки входят в свою стадию (базовую, 1 или 2) и ещё отдельной строкой ниже, поэтому строки в сумме больше общего числа.</p>' + grpBy(c => c.stage == null ? null : String(c.stage), SLAB, ["basic", "1", "2"]) + (ex.length ? row("Покемоны ex (входят и в стадии выше)", got(ex), ex.length) : ""));
     out += acc("🔥", "Покемоны по стихиям", "10 стихий", grpBy(c => c.element || null, ELAB, ["grass", "fire", "water", "lightning", "psychic", "fighting", "darkness", "metal", "dragon", "colorless"]));
   }
   if (ms.length) {
@@ -394,6 +397,10 @@ function drawStats(body) {
   }
   let last = ""; try { last = localStorage.getItem("tcgp-lastbackup") || ""; } catch (e) {}
   out += acc("💾", "Копия данных", last ? "последняя копия: " + new Date(last).toLocaleDateString("ru-RU") : "копии ещё не было", '<p class="prog">Отметки, копии, желаемое и переносы миссий хранятся только в этом браузере, в репозитории их нет. Чтобы не потерять их (очистка Safari, смена устройства), время от времени сохраняй копию и убери её в «Файлы» или iCloud.</p><div class="bk"><button class="more" id="bkx">Сохранить копию</button><label class="more">Восстановить из копии<input type="file" id="bki" accept="application/json" hidden></label></div>');
+  const days = last ? (Date.now() - new Date(last).getTime()) / 864e5 : 1e9;
+  if (owned.size > 0 && days > 30) out = '<div class="note">' + (last ? "Копию данных не сохраняли " + Math.floor(days) + " дн." : "Копия данных ещё не сохранялась") + ". Сохрани её внизу, в разделе «Копия данных».</div>" + out;
+  out += acc("🔧", "Проверка данных", dataFixes.length ? "исправлено автоматически: " + dataFixes.length : "исправлений не потребовалось", dataFixes.length ? '<p class="prog">Эти названия и номера в твоём cards.json приложение исправляет само при каждой загрузке (сам файл не меняется).</p>' + dataFixes.map(f => '<div class="irow"><span>' + esc(f[0]) + "</span><b>" + esc(f[1]) + " → " + esc(f[2]) + "</b></div>").join("") : '<p class="prog">Названия и номера в порядке.</p>');
+  out += acc("ℹ️", "Источники данных", "откуда всё взято", '<p class="prog">Неофициальный фанатский проект для личного некоммерческого использования, не связан с The Pokémon Company.</p><div class="irow"><span>Карточки, сеты, паки, картинки</span><b>pokemon-tcg-pocket-database (flibustier), лицензия MIT</b></div><div class="irow"><span>Задания коллекций</span><b>Bulbapedia, лицензия CC BY-NC-SA 2.5</b></div><div class="irow"><span>Список покемонов и их картинки</span><b>PokeAPI и PokeAPI/sprites</b></div><p class="prog">Pokémon и изображения карточек принадлежат Nintendo, Creatures, GAME FREAK, The Pokémon Company и DeNA.</p>');
   body.innerHTML = out;
   const bx = $("#bkx"), bi = $("#bki"); if (bx) bx.onclick = exportData; if (bi) bi.onchange = importData;
 }
@@ -643,7 +650,9 @@ $("#nav").onclick = e => {
   window.addEventListener("error", e => { if (!cards.length) msg("Ошибка в приложении: " + esc(e.message)); });
   try {
     const [c0, s0, slugs] = await Promise.all([getJson(BASE_URLS), getJson(SETS_URLS).catch(() => ({})), loadDex()]);
-    cards = asArr(c0).map(x => Object.assign({}, x, { poke: x.type === "pokemon", packs: x.packs || [], inum: x.number, name: String(x.name).replace(/([a-zà-ÿ])([A-Z])/g, "$1 $2") }));
+    cards = asArr(c0).map(x => Object.assign({}, x, { poke: x.type === "pokemon", packs: x.packs || [], inum: x.number, name: cleanName(x.name) }));
+    dataFixes = [];
+    asArr(c0).forEach((x, i) => { if (cards[i].name !== x.name) dataFixes.push([cards[i].set + " " + cards[i].number, x.name, cards[i].name]); });
     renumberNegatives();
     const sm = new Map();
     Object.values(s0 || {}).flat().forEach(x => { if (x && x.code && !sm.has(x.code)) sm.set(x.code, x); });
