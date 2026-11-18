@@ -24,8 +24,11 @@ def main():
             sys.exit("В архиве нет картинок cards-by-set: структура архива изменилась, ничего не скопировано.")
         for n in names:
             rel = n.replace("\\", "/").split(MARK, 1)[1]
-            if not rel or rel.startswith("/") or ".." in rel.split("/"):
+            parts = rel.split("/")
+            if not rel or rel.startswith("/") or ".." in parts:
                 continue                                  # защита от странных путей в архиве
+            if any(p.startswith(".") for p in parts) or "__MACOSX" in n.split("/"):
+                continue                                  # мусор macOS внутри архива (._файл, __MACOSX)
             target = os.path.join(dest, rel)
             info = z.getinfo(n)
             if os.path.exists(target):
