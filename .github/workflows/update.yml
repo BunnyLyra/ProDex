@@ -37,6 +37,10 @@ jobs:
           curl -fsSL --retry 3 \
             "https://raw.githubusercontent.com/PocketDecks/pokemon-tcg-pocket-cards/main/data/v5/cards.json" \
             -o src/decks.json
+          # таблица шансов выпадения (нужна для «Какой пак открывать»); если не скачалась, остаётся прежний файл
+          curl -fsSL --retry 3 "https://raw.githubusercontent.com/$FLIB/main/dist/pullRates.json" -o src/pullRates.json \
+            || curl -fsSL --retry 3 "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database/dist/pullRates.json" -o src/pullRates.json \
+            || echo "::warning::pullRates.json не скачался, прежний файл остаётся"
           ls -l src
 
       - name: Sync card images from the latest release
@@ -53,17 +57,32 @@ jobs:
           if [ "$TAG" = "$OLD" ]; then echo "Новых релизов нет"; exit 0; fi
           URL=$(jq -r --arg t "$TAG" '.[] | select(.tag_name == $t) | .assets[] | select(.name == "release.zip") | .browser_download_url' src/releases.json | head -n 1)
           curl -fL --retry 3 "$URL" -o src/release.zip
+          mkdir -p dist
           python3 -I scripts/sync_images.py src/release.zip dist/images/cards-by-set
           echo "$TAG" > dist/.release-tag
 
       - name: Build dist/cards.json
         run: |
           set -euo pipefail
+          mkdir -p dist
           python3 -I scripts/update_cards.py \
             --base src/cards.json --decks src/decks.json \
             --prev dist/cards.json --out dist/cards.json
           # sets.json обновляем только если пришёл корректный непустой файл
           python3 -I -c "import json,sys; d=json.load(open('src/sets.json')); sys.exit(0 if d else 1)" && cp src/sets.json dist/sets.json
+          # pullRates.json обновляем только если он корректный и в нём не меньше наборов, чем было
+          if [ -f src/pullRates.json ]; then
+            python3 -I - <<'PY' && cp src/pullRates.json dist/pullRates.json || echo "::warning::pullRates.json не обновлён (файл некорректный или в нём меньше наборов)"
+          import json, os, sys
+          try:
+              new = json.load(open("src/pullRates.json"))
+              old = json.load(open("dist/pullRates.json")) if os.path.exists("dist/pullRates.json") else {}
+          except Exception:
+              sys.exit(1)
+          ok = isinstance(new, dict) and len(new) >= max(10, len(old))
+          sys.exit(0 if ok else 1)
+          PY
+          fi
 
       - name: Commit changes
         id: commit
@@ -71,7 +90,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist/cards.json dist/sets.json dist/images/cards-by-set dist/.release-tag
+          git add -A dist
           if git diff --cached --quiet; then echo "Изменений нет"; echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; fi
           git commit -m "Обновление данных карт"
           git pull --rebase
