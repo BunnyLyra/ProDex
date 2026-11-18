@@ -1,0 +1,86 @@
+name: Update cards data
+
+# Каждый день собирает dist/cards.json из двух источников и подтягивает картинки новых карт.
+# Источник списка карт, картинок и паков: flibustier/pokemon-tcg-pocket-database
+# Источник типов, стихий, HP, атак: PocketDecks/pokemon-tcg-pocket-cards (data/v5/cards.json, AGPL-3.0-or-later)
+# Если проверки в scripts/update_cards.py не пройдены, ничего не коммитится, а запуск помечается красным.
+
+on:
+  schedule:
+    - cron: "30 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: update-cards
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download sources
+        run: |
+          set -euo pipefail
+          mkdir -p src
+          FLIB=flibustier/pokemon-tcg-pocket-database
+          # список карт и сеты: сначала GitHub, потом запасной CDN
+          for f in cards sets; do
+            curl -fsSL --retry 3 "https://raw.githubusercontent.com/$FLIB/main/dist/$f.json" -o "src/$f.json" \
+              || curl -fsSL --retry 3 "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database/dist/$f.json" -o "src/$f.json"
+          done
+          curl -fsSL --retry 3 \
+            "https://raw.githubusercontent.com/PocketDecks/pokemon-tcg-pocket-cards/main/data/v5/cards.json" \
+            -o src/decks.json
+          ls -l src
+
+      - name: Sync card images from the latest release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # первый релиз (они идут от новых к старым), в котором есть release.zip
+          gh api --paginate "repos/flibustier/pokemon-tcg-pocket-database/releases" | jq -s 'add' > src/releases.json   # склеиваем страницы в один список
+          TAG=$(jq -r '[.[] | select(any(.assets[]?; .name == "release.zip"))][0].tag_name // empty' src/releases.json)
+          if [ -z "$TAG" ]; then echo "::warning::Релиз с release.zip не найден, картинки не обновлялись"; exit 0; fi
+          OLD=$(cat dist/.release-tag 2>/dev/null || true)
+          echo "Последний релиз: $TAG, обработанный раньше: ${OLD:-нет}"
+          if [ "$TAG" = "$OLD" ]; then echo "Новых релизов нет"; exit 0; fi
+          URL=$(jq -r --arg t "$TAG" '.[] | select(.tag_name == $t) | .assets[] | select(.name == "release.zip") | .browser_download_url' src/releases.json | head -n 1)
+          curl -fL --retry 3 "$URL" -o src/release.zip
+          python3 -I scripts/sync_images.py src/release.zip dist/images/cards-by-set
+          echo "$TAG" > dist/.release-tag
+
+      - name: Build dist/cards.json
+        run: |
+          set -euo pipefail
+          python3 -I scripts/update_cards.py \
+            --base src/cards.json --decks src/decks.json \
+            --prev dist/cards.json --out dist/cards.json
+          # sets.json обновляем только если пришёл корректный непустой файл
+          python3 -I -c "import json,sys; d=json.load(open('src/sets.json')); sys.exit(0 if d else 1)" && cp src/sets.json dist/sets.json
+
+      - name: Commit changes
+        id: commit
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist/cards.json dist/sets.json dist/images/cards-by-set dist/.release-tag
+          if git diff --cached --quiet; then echo "Изменений нет"; echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          git commit -m "Обновление данных карт"
+          git pull --rebase
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Request GitHub Pages build
+        if: steps.commit.outputs.changed == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds"
