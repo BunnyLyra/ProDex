@@ -93,18 +93,19 @@ input{flex:1;min-width:140px}
 .qty{display:flex;align-items:center;gap:8px;margin-left:12px}.qty b{min-width:22px;text-align:center}
 .gs{display:inline-block;line-height:1;font-family:-apple-system,"Segoe UI Symbol","Apple Symbols",sans-serif;font-size:1.1em;vertical-align:-0.02em;transform:translateY(-0.14em)}
 .pk .nm{line-height:1.5}
-.fl{position:absolute;left:5px;top:3px;font-size:14px;text-shadow:0 0 3px #000;pointer-events:none}.fl b{margin-right:2px}.fh{color:#ff5a7a}.fs{color:#ffc933}
 .fav.st.on{color:#e8a900;border-color:#e8a900}
-.panel.sm.ctl{display:inline-flex;align-items:center;gap:14px;padding:10px 14px}
+.panel.sm.ctl{display:inline-flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 14px;max-width:100%}
 .rb{width:40px;height:40px;border-radius:50%;border:1px solid var(--ln);background:var(--bg);color:var(--mt);font-size:20px;line-height:1;padding:0}
 .rb.on{color:#fff;background:var(--ok);border-color:var(--ok)}.rb.heart.on{background:none;color:#ff3b5c;border-color:#ff3b5c}.rb.star.on{background:none;color:#e8a900;border-color:#e8a900}
 .ctl .qty{margin:0;padding:0 14px;border-left:1px solid var(--ln);border-right:1px solid var(--ln)}
+.gt{margin-top:8px;font-weight:700}.ind{padding-left:12px;border-left:2px solid var(--ln);margin-left:2px}.bk{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}.bk .more{margin:0}
+@media(max-width:480px){.rb{width:36px;height:36px;font-size:18px}.ctl .qty{padding:0 8px}.panel.sm.ctl{gap:8px 10px}}
 </style>
 </head>
 <body>
 <header>
   <div id="info" style="font-size:12px;color:var(--mt);float:right;margin-top:6px"></div>
-  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v23</small></h1>
+  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v24</small></h1>
   <nav id="nav">
     <button data-t="cards" class="on">Карточки</button>
     <button data-t="species">Покемоны</button>
@@ -115,17 +116,14 @@ input{flex:1;min-width:140px}
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
 
 <div id="cv" hidden></div>
-<script src="missions.js?v=23"></script>
+<script src="missions.js?v=24"></script>
 <script>
 /* Данные и картинки берутся из репозитория flibustier/pokemon-tcg-pocket-database */
 const PKG = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database";
 const RAW = "https://raw.githubusercontent.com/flibustier/pokemon-tcg-pocket-database/main";
 const PIN = PKG + "@2.10.0"; /* запасная версия, если в свежей поменялись файлы */
-/* Сначала ищем файлы рядом с index.html (твоя копия в том же репозитории), потом в интернете */
-/* Основа: cards.json (все сеты). cards.extra.json добавляет тип, стихию и стадию (но он может быть старее). */
+/* Основа: твой dist/cards.json (все сеты, типы, паки). Если его рядом нет, берём копии из интернета по очереди, а не все сразу. */
 const BASE_URLS = ["dist/cards.json", PKG + "/dist/cards.json", RAW + "/dist/cards.json", PIN + "/dist/cards.json"];
-const DATA_URLS = ["dist/cards.extra.json", PKG + "/dist/cards.extra.json", RAW + "/dist/cards.extra.json", PIN + "/dist/cards.extra.json"];
-const PACK_URLS = ["dist/cards.min.json", PKG + "/dist/cards.min.json", RAW + "/dist/cards.min.json", PIN + "/dist/cards.min.json"];
 const SETS_URLS = ["dist/sets.json", PKG + "/dist/sets.json", RAW + "/dist/sets.json", PIN + "/dist/sets.json"];
 /* Картинки: приложение пробует адреса по очереди и запоминает рабочий */
 const IMG_SRC = [
@@ -189,7 +187,10 @@ try { owned = new Set(JSON.parse(localStorage.getItem(KEY) || "[]").map(x => Str
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...owned])); } catch (e) {} };
 
 let cards = [], sets = [], tab = "cards", dex = [], spMap = new Map(), keyMap = new Map();
-const st = { set: "", q: "", show: "all", mset: "", secret: false, limit: 30, cardOpen: "", wish: false, alt: false, pack: "", gen: "", favOnly: false, flt: "all", sort: "num", open: 0, scroll: 0 };
+const st = { set: "", q: "", show: "all", mset: "", secret: false, limit: 30, cl: 240, cardOpen: "", wish: false, alt: false, pack: "", gen: "", favOnly: false, flt: "all", sort: "num", open: 0, scroll: 0 };
+const UIKEY = "tcgp-ui-v1", UI_FIELDS = ["set", "pack", "q", "show", "wish", "alt", "gen", "favOnly", "flt", "sort", "mset", "secret"];
+try { const u = JSON.parse(localStorage.getItem(UIKEY) || "null"); if (u) { UI_FIELDS.forEach(k => { if (u[k] !== undefined) st[k] = u[k]; }); if (["cards", "species", "missions", "stats"].includes(u.tab)) tab = u.tab; } } catch (e) {}
+function saveUI() { try { const o = { tab }; UI_FIELDS.forEach(k => { o[k] = st[k]; }); localStorage.setItem(UIKEY, JSON.stringify(o)); } catch (e) {} }
 const cid = c => (c.set + "-" + c.number).toLowerCase();
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
@@ -197,7 +198,6 @@ const base = n => n.replace(/\s+ex$/i, "").trim();
 const setName = s => (s.name && s.name.en) || s.code;
 
 const asArr = d => Array.isArray(d) ? d : (d && typeof d === "object" ? (Array.isArray(d.cards) ? d.cards : (Object.values(d).find(Array.isArray) || [])) : []);
-async function getMany(urls) { const r = await Promise.all(urls.map(u => getJson([u]).then(d => d, () => null))); return r.filter(x => x != null); }
 async function getJson(urls) {
   const errs = [];
   for (const u of urls) {
@@ -270,7 +270,7 @@ const TLAB = { pokemon: "Покемоны", item: "Предметы", supporter:
 const TONE = { pokemon: "Покемон", item: "Предмет", supporter: "Тренер", tool: "Инструмент", stadium: "Стадион" };
 const ELAB = { grass: "Трава", fire: "Огонь", water: "Вода", lightning: "Молния", psychic: "Психо", fighting: "Боевые", darkness: "Тьма", metal: "Металл", dragon: "Дракон", colorless: "Обычный" };
 const SLAB = { basic: "Базовые", "1": "1 стадия", "2": "2 стадия" };
-const RNAME = { C: "Common", U: "Uncommon", R: "Rare", RR: "Double Rare", AR: "Art Rare", SR: "Super Rare", SAR: "Special Art Rare", IM: "Immersive Rare", UR: "Ultra Rare" };
+const RNAME = { C: "Common", U: "Uncommon", R: "Rare", RR: "Double Rare", AR: "Art Rare", SR: "Super Rare", SAR: "Special Art Rare", IM: "Immersive Rare", UR: "Crown Rare", S: "Shiny", SSR: "Shiny Super" };
 const RORD = ["C", "U", "R", "RR", "SR", "AR", "SAR", "IM", "S", "SSR", "UR", "AN"];
 function cmpCard(a, b) {
   const ra = RORD.indexOf(a.rarity), rb = RORD.indexOf(b.rarity), x = ra < 0 ? 99 : ra, y = rb < 0 ? 99 : rb;
@@ -299,6 +299,15 @@ let wish = new Set(), alt = new Set();
 try { wish = new Set(JSON.parse(localStorage.getItem(WKEY) || "[]")); alt = new Set(JSON.parse(localStorage.getItem(AKEY) || "[]")); } catch (e) {}
 const saveFlags = () => { try { localStorage.setItem(WKEY, JSON.stringify([...wish])); localStorage.setItem(AKEY, JSON.stringify([...alt])); } catch (e) {} };
 const flagHtml = i => (wish.has(i) ? '<b class="fh">♥</b>' : "") + (alt.has(i) ? '<b class="fs">★</b>' : "");
+function migrateId(a, b) {
+  if (owned.has(a)) { owned.delete(a); owned.add(b); save(); }
+  if (copies[a] != null) { copies[b] = copies[a]; delete copies[a]; saveQ(); }
+  let ch = false; [wish, alt].forEach(z => { if (z.has(a)) { z.delete(a); z.add(b); ch = true; } }); if (ch) saveFlags();
+}
+function renumberNegatives() {   /* номера <= 0 (три Mew из SP1) ставим в конец набора: 28, 29, 30 */
+  const mx = {}; cards.forEach(x => { if (x.number > 0) mx[x.set] = Math.max(mx[x.set] || 0, x.number); });
+  cards.filter(x => x.number <= 0).sort((a, b) => b.number - a.number).forEach(x => { const old = (x.set + "-" + x.number).toLowerCase(); x.number = mx[x.set] = (mx[x.set] || 0) + 1; migrateId(old, cid(x)); });
+}
 const matches = (c, f) => Object.keys(f).every(key => {
   const v = f[key], vals = (Array.isArray(v) ? v : [v]).map(y => String(y).toLowerCase());
   if (key === "dual") return !!c.element2 === !!f[key];
@@ -343,7 +352,7 @@ function mst(k, x) {
   return { h: Math.min(h, t), t, done: t > 0 && h >= t };
 }
 function drawStats(body) {
-  const row = (name, a, b) => '<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(name) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + a + " / " + b + " · " + pct(a, b) + "%</span></div>" + meter(a, b) + "</div>";
+  const row = (name, a, b, left) => '<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(name) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + a + " / " + b + " · " + pct(a, b) + "%" + (left ? " · ещё " + (b - a) : "") + "</span></div>" + meter(a, b) + "</div>";
   const got = l => l.filter(c => owned.has(cid(c))).length;
   const acc = (icon, title, sub, inner) => '<details class="acc"><summary><span class="ai">' + icon + '</span><span class="at"><b>' + title + "</b><small>" + sub + '</small></span><span class="chv">›</span></summary><div class="accb">' + inner + "</div></details>";
   const grpBy = (fn, lab, order) => { const m = new Map(); cards.forEach(c => { const k = fn(c); if (k == null) return; if (!m.has(k)) m.set(k, []); m.get(k).push(c); }); return order.filter(k => m.has(k)).map(k => row(lab[k] || String(k), got(m.get(k)), m.get(k).length)).join(""); };
@@ -355,10 +364,16 @@ function drawStats(body) {
   const sw = sets.filter(x => cards.some(c => c.set === x.code));
   out += acc("🗂️", "Карточки по сетам", sw.length + " сетов", sw.map(x => { const l = cards.filter(c => c.set === x.code); return row(setName(x) + " (" + x.code + ")", got(l), l.length); }).join(""));
   const prow = [];
-  sets.forEach(x => { if (/promo/i.test(x.code + " " + setName(x))) { const l = cards.filter(c => c.set === x.code); if (l.length) prow.push(row(setName(x), got(l), l.length)); return; } packsFor(x).forEach(pn => { const l = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn)); if (l.length) prow.push(row(setName(x) + " · " + pn, got(l), l.length)); }); });
+  sets.forEach(x => {
+    if (/promo/i.test(x.code + " " + setName(x))) { const l = cards.filter(c => c.set === x.code); if (l.length) prow.push(row(setName(x), got(l), l.length, true)); return; }
+    packsFor(x).forEach(pn => { const l = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn)); if (l.length) prow.push(row(setName(x) + " · " + pn, got(l), l.length, true)); });
+    const np = cards.filter(c => c.set === x.code && !(c.packs || []).length); if (np.length) prow.push(row(setName(x) + " · без пака", got(np), np.length, true));
+  });
   if (prow.length) out += acc("🎴", "Карточки по пакам", prow.length + " пакетов", prow.join(""));
   const rars = [...new Set(cards.map(c => c.rarity || "—"))].sort((a, b) => { const i = RORD.indexOf(a), j = RORD.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || a.localeCompare(b); });
-  out += acc("💎", "Карточки по редкости", rars.length + " видов", rars.map(r => { const l = cards.filter(c => (c.rarity || "—") === r); return row(r, got(l), l.length); }).join(""));
+  const REGS = ["C", "U", "R", "RR"], rl = r => cards.filter(c => (c.rarity || "—") === r), rrow = r => row(r + (RNAME[r] ? " · " + RNAME[r] : ""), got(rl(r)), rl(r).length);
+  const regAll = cards.filter(c => REGS.includes(c.rarity)), spAll = cards.filter(c => !REGS.includes(c.rarity));
+  out += acc("💎", "Карточки по редкости", "обычные и редкие", '<div class="gt">' + row("Обычные карточки (C, U, R, RR)", got(regAll), regAll.length) + '</div><div class="ind">' + rars.filter(r => REGS.includes(r)).map(rrow).join("") + '</div><div class="gt">' + row("Редкие карточки", got(spAll), spAll.length) + '</div><div class="ind">' + rars.filter(r => !REGS.includes(r)).map(rrow).join("") + "</div>");
   if (cards.some(c => c.type)) {
     const ex = cards.filter(c => c.poke && / ex$/i.test(c.name));
     out += acc("🧩", "Карточки по типам", "покемоны и тренеры", grpBy(c => c.type || null, TLAB, ["pokemon", "item", "supporter", "tool", "stadium"]));
@@ -372,7 +387,30 @@ function drawStats(body) {
   }
   const wl = cards.filter(c => wish.has(cid(c))), al = cards.filter(c => alt.has(cid(c)));
   if (wl.length || al.length) out += acc("💗", "Желаемое и другой аккаунт", wl.length + " желаемых · " + al.length + " на другом аккаунте", row("Желаемое: уже собрано", got(wl), wl.length) + row("На другом аккаунте: есть и здесь", got(al), al.length));
+  if (ms.length) {
+    const rw = new Map();
+    ms.forEach(o => String(o.x.reward || "").split(",").forEach(t => { t = t.trim(); if (!t) return; const m = t.match(/^(.*?)\s*[×x]\s*(\d+)$/), nm = m ? m[1].trim() : t, n = m ? +m[2] : 1, e = rw.get(nm) || [0, 0]; e[1] += n; if (o.s.done) e[0] += n; rw.set(nm, e); }));
+    if (rw.size) out += acc("🎁", "Награды миссий", "получено за выполненные миссии", [...rw].sort((a, b) => b[1][1] - a[1][1]).map(([k, v]) => row(k, v[0], v[1])).join(""));
+  }
+  let last = ""; try { last = localStorage.getItem("tcgp-lastbackup") || ""; } catch (e) {}
+  out += acc("💾", "Копия данных", last ? "последняя копия: " + new Date(last).toLocaleDateString("ru-RU") : "копии ещё не было", '<p class="prog">Отметки, копии, желаемое и переносы миссий хранятся только в этом браузере, в репозитории их нет. Чтобы не потерять их (очистка Safari, смена устройства), время от времени сохраняй копию и убери её в «Файлы» или iCloud.</p><div class="bk"><button class="more" id="bkx">Сохранить копию</button><label class="more">Восстановить из копии<input type="file" id="bki" accept="application/json" hidden></label></div>');
   body.innerHTML = out;
+  const bx = $("#bkx"), bi = $("#bki"); if (bx) bx.onclick = exportData; if (bi) bi.onchange = importData;
+}
+const BK_KEYS = ["tcgp-owned-v1", "tcgp-qty-v1", "tcgp-wish-v1", "tcgp-alt-v1", "tcgp-mis-v1", "tcgp-sec-v2", "tcgp-fold-v1", "tcgp-fav-v1", "tcgp-ui-v1"];
+function exportData() {
+  const data = {}; BK_KEYS.forEach(k => { try { const v = localStorage.getItem(k); if (v != null) data[k] = v; } catch (e) {} });
+  const txt = JSON.stringify({ app: "tcgp", v: 1, date: new Date().toISOString(), data }), name = "tcgp-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+  try { localStorage.setItem("tcgp-lastbackup", new Date().toISOString()); } catch (e) {}
+  const file = typeof File !== "undefined" ? new File([txt], name, { type: "application/json" }) : null;
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: name }).catch(() => {}); return; }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], { type: "application/json" })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+function importData(e) {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { try { const o = JSON.parse(r.result); if (!o || o.app !== "tcgp" || !o.data) throw 0; if (!confirm("Заменить текущие данные данными из копии?")) return; Object.keys(o.data).forEach(k => { if (BK_KEYS.includes(k)) localStorage.setItem(k, o.data[k]); }); location.reload(); } catch (err) { alert("Это не копия данных приложения."); } };
+  r.readAsText(f);
 }
 
 /* ===== Отметка карточки и страница карточки ===== */
@@ -381,7 +419,6 @@ function afterChange(i) {
   document.querySelectorAll('.card[data-id="' + i + '"]').forEach(x => {
     x.classList.toggle("on", q > 0);
     const f = sel => x.querySelector ? x.querySelector(sel) : null, k = f(".ck"), b = f(".qb"), z = f(".stp b");
-    const fl = f(".fl"); if (fl) fl.innerHTML = flagHtml(i);
     if (k) k.textContent = q > 0 ? "✓" : ""; if (b) b.textContent = q > 1 ? "×" + q : ""; if (z) z.textContent = q;
   });
   if (tab === "cards" && st.show === "all" && !st.wish && !st.alt) {
@@ -392,14 +429,14 @@ function afterChange(i) {
 }
 function toggleFlag(set, i) { set.has(i) ? set.delete(i) : set.add(i); saveFlags(); afterChange(i); }
 const toggleCard = i => { setQty(i, qty(i) ? 0 : 1); afterChange(i); };
+function hideCard() { st.cardOpen = ""; const v = $("#cv"); if (v) v.hidden = true; if (document.body && document.body.style) document.body.style.overflow = ""; }
 function openCard(i) {
   st.cardOpen = i; renderCard();
   if (document.body && document.body.style) document.body.style.overflow = "hidden";
+  try { history.pushState({ v: "card" }, ""); } catch (e) {}
 }
-function closeCard() {
-  st.cardOpen = ""; const v = $("#cv"); if (v) v.hidden = true;
-  if (document.body && document.body.style) document.body.style.overflow = "";
-}
+function closeCard() { if (typeof history !== "undefined" && history.state && history.state.v === "card") history.back(); else hideCard(); }
+window.addEventListener("popstate", () => { if (st.cardOpen) hideCard(); else if (st.open) { st.open = 0; build(); window.scrollTo(0, st.scroll || 0); } });
 function renderCard() {
   const id = st.cardOpen, v = $("#cv"), c = cards.find(x => cid(x) === id);
   if (!c) { v.hidden = true; return; }
@@ -407,7 +444,7 @@ function renderCard() {
   const r = (k, val) => val == null || val === "" ? "" : '<div class="irow"><span>' + k + "</span><b>" + esc(val) + "</b></div>";
   const el = c.element ? (ELAB[c.element] || c.element) + (c.element2 ? " / " + (ELAB[c.element2] || c.element2) : "") : "";
   v.innerHTML = '<div class="cvw"><div class="cvl"><button class="more" id="cvback" style="margin:0 0 10px">← Назад</button><div class="panel">' +
-    '<img class="cvimg" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)">' +
+    '<img class="cvimg" alt="" src="' + IMG_SRC[pref](c.set, c.inum != null ? c.inum : c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + (c.inum != null ? c.inum : c.number) + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)">' +
     '<div class="cvt">' + esc(c.name) + '</div><div class="prog" style="margin:0">' + c.number + " · " + esc(s ? setName(s) : c.set) + "</div></div></div>" +
     '<div class="cvr"><div class="panel sm ctl">' +
     '<button class="rb' + (own ? " on" : "") + '" id="cvck" aria-label="В коллекции">✓</button>' +
@@ -434,7 +471,7 @@ function cf() {
 function tile(c, o) {
   const id = cid(c), q = qty(id);
   return '<div class="card' + (q ? " on" : "") + '" data-id="' + id + '">' +
-    '<span class="im"><img loading="lazy" alt="" src="' + IMG_SRC[pref](c.set, c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + c.number + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)"><button class="ck" aria-label="Отметить">' + (q ? "✓" : "") + '</button><span class="qb">' + (q > 1 ? "×" + q : "") + '</span><span class="fl">' + flagHtml(id) + "</span></span>" +
+    '<span class="im"><img loading="lazy" alt="" src="' + IMG_SRC[pref](c.set, c.inum != null ? c.inum : c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + (c.inum != null ? c.inum : c.number) + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)"><button class="ck" aria-label="Отметить">' + (q ? "✓" : "") + '</button><span class="qb">' + (q > 1 ? "×" + q : "") + '</span></span>' +
     '<span class="nm">' + esc(c.name) + '</span><span class="no">' + c.set + " · " + c.number + " · " + c.rarity + "</span>" +
     (o && o.stp ? '<span class="stp"><button data-q="-">−</button><b>' + q + '</b><button data-q="+">+</button></span>' : "") + "</div>";
 }
@@ -445,8 +482,10 @@ function setSelect(id, val, withAll) {
 function meter(a, b) { return '<div class="meter"><i style="width:' + (b ? Math.round(a / b * 100) : 0) + '%"></i></div>'; }
 
 function build() {
+  saveUI();
   const m = $("#main");
   if (tab === "cards") {
+    st.cl = 240;
     const po = packOpts();
     m.innerHTML = '<div class="tb"><div class="bar">' + setSelect("fset", st.set, true) +
       (po.length ? '<select id="fpack"><option value="">Все паки</option>' + po.map(x => '<option value="' + esc(x[0]) + '"' + (st.pack === x[0] ? " selected" : "") + ">" + esc(x[1]) + "</option>").join("") + "</select>" : "") +
@@ -454,10 +493,10 @@ function build() {
       '<div class="seg" id="fshow">' + [["all", "Все"], ["have", "Есть"], ["miss", "Нет"]].map(x => '<button data-v="' + x[0] + '"' + (st.show === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + '</div><button class="fav' + (st.wish ? " on" : "") + '" id="fwish" title="Желаемое">♥</button><button class="fav st' + (st.alt ? " on" : "") + '" id="falt" title="Есть на другом аккаунте">★</button></div></div>' +
       '<div class="prog" id="prog"></div><div class="grid" id="body"></div>';
     $("#fset").onchange = e => { st.set = e.target.value; st.pack = ""; build(); };
-    if ($("#fpack")) $("#fpack").onchange = e => { st.pack = e.target.value; draw(); };
-    $("#fq").oninput = e => { st.q = e.target.value; draw(); };
-    $("#fwish").onclick = e => { st.wish = !st.wish; e.currentTarget.classList.toggle("on", st.wish); draw(); };
-    $("#falt").onclick = e => { st.alt = !st.alt; e.currentTarget.classList.toggle("on", st.alt); draw(); };
+    if ($("#fpack")) $("#fpack").onchange = e => { st.pack = e.target.value; st.cl = 240; draw(); };
+    $("#fq").oninput = e => { st.q = e.target.value; st.cl = 240; draw(); };
+    $("#fwish").onclick = e => { st.wish = !st.wish; st.cl = 240; e.currentTarget.classList.toggle("on", st.wish); draw(); };
+    $("#falt").onclick = e => { st.alt = !st.alt; st.cl = 240; e.currentTarget.classList.toggle("on", st.alt); draw(); };
     $("#fshow").onclick = e => { const v = e.target.dataset.v; if (v) { st.show = v; build(); } };
   } else if (tab === "species") {
     if (st.open) {
@@ -498,6 +537,7 @@ function setHH() { const h = document.querySelector("header"), de = document.doc
 window.addEventListener("resize", setHH);
 
 function draw() {
+  saveUI();
   const body = $("#body"), q = st.q.trim().toLowerCase();
   if (tab === "cards") {
     let list = cf();
@@ -505,8 +545,9 @@ function draw() {
     $("#prog").innerHTML = "Собрано " + have + " из " + list.length + meter(have, list.length);
     if (st.show === "have") list = list.filter(c => owned.has(cid(c)));
     if (st.show === "miss") list = list.filter(c => !owned.has(cid(c)));
-    body.innerHTML = list.length ? list.map(tile).join("") : '<p class="empty">Ничего не найдено</p>';
+    body.innerHTML = list.length ? list.slice(0, st.cl).map(tile).join("") + (list.length > st.cl ? '<button class="more" id="moreCards" style="grid-column:1/-1">Показать ещё (' + (list.length - st.cl) + ")</button>" : "") : '<p class="empty">Ничего не найдено</p>';
     body.className = "grid";
+    const mb = $("#moreCards"); if (mb && typeof IntersectionObserver !== "undefined") { if (window.__io) window.__io.disconnect(); window.__io = new IntersectionObserver(en => { if (en[0].isIntersecting) { st.cl += 240; draw(); } }); window.__io.observe(mb); }
   } else if (tab === "species") {
     if (st.open) {
       const l = (spMap.get(st.open) || []).slice().sort(cmpCard), h = l.filter(c => owned.has(cid(c))).length;
@@ -573,13 +614,14 @@ document.addEventListener("click", e => {
   const mb = e.target.closest("[data-mk]");
   if (mb) { const k = mb.dataset.mk, x = MIS[k][+mb.dataset.mi], id = mid(k, x), a = mb.dataset.a, cur = +mstate[id] || 0, mx = x.need || 1; mstate[id] = a === "+" ? Math.min(cur + 1, mx) : a === "-" ? Math.max(0, cur - 1) : (cur ? 0 : 1); saveM(); draw(); return; }
   const pk = e.target.closest(".pk");
-  if (pk) { st.scroll = window.scrollY || 0; st.open = +pk.dataset.d; build(); window.scrollTo(0, 0); return; }
-  if (e.target.closest("#back")) { st.open = 0; build(); window.scrollTo(0, st.scroll || 0); return; }
+  if (pk) { st.scroll = window.scrollY || 0; st.open = +pk.dataset.d; build(); window.scrollTo(0, 0); try { history.pushState({ v: "pk" }, ""); } catch (e) {} return; }
+  if (e.target.closest("#back")) { if (typeof history !== "undefined" && history.state && history.state.v === "pk") history.back(); else { st.open = 0; build(); window.scrollTo(0, st.scroll || 0); } return; }
   if (e.target.closest("#hrt")) { fav.has(st.open) ? fav.delete(st.open) : fav.add(st.open); saveFav(); build(); return; }
   const sq = e.target.closest("[data-q]");
   if (sq) { const id = sq.closest(".card").dataset.id; setQty(id, qty(id) + (sq.dataset.q === "+" ? 1 : -1)); afterChange(id); return; }
   if (e.target.closest("#cvm")) { setQty(st.cardOpen, qty(st.cardOpen) - 1); afterChange(st.cardOpen); return; }
   if (e.target.closest("#cvp")) { setQty(st.cardOpen, qty(st.cardOpen) + 1); afterChange(st.cardOpen); return; }
+  if (e.target.closest("#moreCards")) { st.cl += 240; draw(); return; }
   const ck = e.target.closest(".ck");
   if (ck) { toggleCard(ck.closest(".card").dataset.id); return; }
   if (e.target.closest("#cvback")) { closeCard(); return; }
@@ -600,15 +642,11 @@ $("#nav").onclick = e => {
   const msg = t => { $("#main").innerHTML = '<p class="empty">' + t + "</p>"; };
   window.addEventListener("error", e => { if (!cards.length) msg("Ошибка в приложении: " + esc(e.message)); });
   try {
-    /* основа: cards.json (все сеты); cards.extra.json добавляет тип, стихию, стадию. Источники объединяются */
-    const [bParts, eParts, sParts, slugs] = await Promise.all([getMany(BASE_URLS.slice(0, 3)), getMany(DATA_URLS.slice(0, 3)), getMany(SETS_URLS.slice(0, 3)), loadDex()]);
-    if (!bParts.length && !eParts.length) await getJson(BASE_URLS);
-    const ex = new Map(); eParts.forEach(d => asArr(d).forEach(x => { const k = x.set + "-" + x.number; if (!ex.has(k)) ex.set(k, x); }));
-    const seen = new Set(), c = [];
-    bParts.concat(eParts).forEach(d => asArr(d).forEach(x => { const k = x.set + "-" + x.number; if (!seen.has(k)) { seen.add(k); c.push(Object.assign({}, ex.get(k) || {}, x)); } }));
-    cards = c.map(x => Object.assign({}, x, { poke: x.type === "pokemon", packs: x.packs || [] }));
+    const [c0, s0, slugs] = await Promise.all([getJson(BASE_URLS), getJson(SETS_URLS).catch(() => ({})), loadDex()]);
+    cards = asArr(c0).map(x => Object.assign({}, x, { poke: x.type === "pokemon", packs: x.packs || [], inum: x.number, name: String(x.name).replace(/([a-zà-ÿ])([A-Z])/g, "$1 $2") }));
+    renumberNegatives();
     const sm = new Map();
-    sParts.forEach(d => Object.values(d || {}).flat().forEach(x => { if (x && x.code && !sm.has(x.code)) sm.set(x.code, x); }));
+    Object.values(s0 || {}).flat().forEach(x => { if (x && x.code && !sm.has(x.code)) sm.set(x.code, x); });
     sets = [...sm.values()].sort((a, b) => (b.releaseDate || "").localeCompare(a.releaseDate || ""));
     const known = new Set(sets.map(x => x.code));
     [...new Set(cards.map(x => x.set))].filter(x => !known.has(x)).forEach(code => sets.push({ code, name: { en: code } }));
@@ -616,6 +654,11 @@ $("#nav").onclick = e => {
     cards.sort((a, b) => (si.has(a.set) ? si.get(a.set) : 999) - (si.has(b.set) ? si.get(b.set) : 999) || a.number - b.number);
     if (!cards.length) throw new Error("список карточек пуст");
     buildDex(slugs); indexSpecies(); buildMIS();
+    if (st.set && !sets.some(x => x.code === st.set)) st.set = "";
+    if (st.mset && !sets.some(x => x.code === st.mset)) st.mset = "";
+    if (st.pack && !sets.some(x => x.code === st.pack.split("|")[0])) st.pack = "";
+    document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x.dataset.t === tab));
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
     const nw = sets.find(x => cards.some(c => c.set === x.code));
     $("#info").textContent = "Карточек: " + cards.length + " · сетов: " + sets.filter(x => cards.some(c => c.set === x.code)).length + (nw ? " · новейший: " + nw.code : "") + " · миссий: " + Object.keys(MIS).reduce((a, k) => a + MIS[k].length, 0) + " (секретных: " + Object.keys(MIS).reduce((a, k) => a + MIS[k].filter(m => isSec(k, m)).length, 0) + ")";
     build();
