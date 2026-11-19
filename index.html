@@ -1,5 +1,13 @@
 <!doctype html>
 <html lang="ru">
+<!--
+  Неофициальный фанатский проект для личного некоммерческого использования, не связан с The Pokémon Company.
+  Источники данных:
+   - карточки, сеты, паки, картинки: pokemon-tcg-pocket-database (flibustier), лицензия MIT
+   - задания коллекций (missions.js): Bulbapedia, лицензия CC BY-NC-SA 2.5
+   - список покемонов и их картинки: PokeAPI и PokeAPI/sprites
+  Pokémon и изображения карточек принадлежат Nintendo, Creatures, GAME FREAK, The Pokémon Company и DeNA.
+-->
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -70,8 +78,9 @@ input{flex:1;min-width:140px}
 .card .ck{position:absolute;right:3px;bottom:3px;width:30px;height:30px;padding:0;border:0;background:none;color:transparent;font-size:18px;line-height:1;text-shadow:0 0 3px rgba(0,0,0,.55)}
 .card .ck::before{content:"";position:absolute;inset:-8px}
 .card.on .ck{color:rgba(255,255,255,.6)}
-#cv{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 30px}
-#cv[hidden]{display:none}
+#cv,#pv{position:fixed;inset:0;background:var(--bg);overflow:auto;box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 30px}
+#cv{z-index:50}#pv{z-index:40}
+#cv[hidden],#pv[hidden]{display:none}
 .cvw{display:flex;gap:16px;flex-wrap:wrap;max-width:1000px;margin:0 auto;align-items:flex-start}
 .cvl{flex:1 1 300px;max-width:420px}.cvr{flex:2 1 320px}
 .panel{background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:14px;margin-bottom:12px}
@@ -91,7 +100,7 @@ input{flex:1;min-width:140px}
 .stp{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px}.stp b{min-width:20px;text-align:center}
 .stp button,.qty button{width:28px;height:28px;border-radius:50%;border:1px solid var(--ln);background:var(--bg);color:var(--tx);padding:0;font-size:16px;line-height:1}
 .qty{display:flex;align-items:center;gap:8px;margin-left:12px}.qty b{min-width:22px;text-align:center}
-.gs{display:inline-block;line-height:1;font-family:-apple-system,"Segoe UI Symbol","Apple Symbols",sans-serif;font-size:1.1em;vertical-align:-0.02em;transform:translateY(-0.14em)}
+.gs{display:inline-block;width:1em;height:1em;vertical-align:-0.14em;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .pk .nm{line-height:1.5}
 .fav.st.on{color:#e8a900;border-color:#e8a900}
 .panel.sm.ctl{display:inline-flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 14px;max-width:100%}
@@ -106,7 +115,7 @@ input{flex:1;min-width:140px}
 <body>
 <header>
   <div id="info" style="font-size:12px;color:var(--mt);float:right;margin-top:6px"></div>
-  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v25</small></h1>
+  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v26</small></h1>
   <nav id="nav">
     <button data-t="cards" class="on">Карточки</button>
     <button data-t="species">Покемоны</button>
@@ -116,8 +125,9 @@ input{flex:1;min-width:140px}
 </header>
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
 
+<div id="pv" hidden></div>
 <div id="cv" hidden></div>
-<script src="missions.js?v=25"></script>
+<script src="missions.js?v=26"></script>
 <script>
 /* Данные и картинки берутся из репозитория flibustier/pokemon-tcg-pocket-database */
 const PKG = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database";
@@ -253,7 +263,8 @@ function indexSpecies() {
   cards.forEach(c => { if (!c.type) c.poke = speciesOf(c.name) > 0 && !TW.test(c.name); if (!c.poke) return; const id = speciesOf(c.name); if (id) { if (!spMap.has(id)) spMap.set(id, []); spMap.get(id).push(c); } });
 }
 const prog = d => { const l = spMap.get(d.id) || []; return { h: l.filter(c => owned.has(cid(c))).length, t: l.length }; };
-const escG = t => esc(t).replace(/[♀♂]/g, m => '<span class="gs">' + m + "</span>");
+const GSVG = { "♀": '<svg class="gs" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M12 14v8M8.5 18h7"/></svg>', "♂": '<svg class="gs" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="14" r="5"/><path d="M13.5 10.5L20 4M14.5 4H20v5.5"/></svg>' };
+const escG = t => esc(t).replace(/[♀♂]/g, m => GSVG[m]);
 function pkTile(d) {
   const p = prog(d);
   return '<button class="pk' + (p.t ? "" : " none") + (p.t && p.h === p.t ? " full" : "") + '" data-d="' + d.id + '">' + (fav.has(d.id) ? '<span class="hr">♥</span>' : "") +
@@ -354,6 +365,43 @@ function mst(k, x) {
   const cl = x.cards || [], h = cl.filter(i => owned.has(i)).length, t = x.need || cl.length;
   return { h: Math.min(h, t), t, done: t > 0 && h >= t };
 }
+/* ===== Какой пак открывать: ожидаемое число новых карт по шансам из pullRates.json ===== */
+let PR = null;
+const PR_URLS = ["dist/pullRates.json", RAW + "/dist/pullRates.json", PKG + "/dist/pullRates.json"];
+const PR_MAP = { SR: ["SR", "SAR"], RF: ["R"], UF: ["U"], CF: ["C"] };   /* ☆☆ в таблице шансов = карты SR и SAR; foil-версии R/U/C считаем обычными R/U/C */
+const PR_DIA = ["C", "U", "R", "RR", "RF", "UF", "CF"];                   /* ромбы: всё остальное считается редким */
+function prRates(code) {
+  if (!PR) return null;
+  if (PR[code]) return { r: PR[code], est: false };
+  if (!/^[A-Z]\d+[a-z]?$/.test(code)) return null;                       /* промо и особые наборы не считаем */
+  const base = sets.find(x => PR[x.code] && /^[A-Z]\d$/.test(x.code));   /* для сета без таблицы берём шансы новейшего большого сета (sets идут от новых к старым) */
+  return base ? { r: PR[base.code], est: true, from: base.code } : null;
+}
+function packAdvice() {
+  const out = [];
+  sets.forEach(x => {
+    const pr = prRates(x.code); if (!pr) return;
+    packsFor(x).forEach(pn => {
+      const pool = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn));
+      if (!pool.length) return;
+      const memo = {}, stat = code => memo[code] || (memo[code] = (() => { const ok = PR_MAP[code] || [code], l = pool.filter(c => ok.includes(c.rarity)); return { t: l.length, m: l.filter(c => !owned.has(cid(c))).length }; })());
+      const types = Object.values(pr.r), tot = types.reduce((a, t) => a + (+t.appearance_rate || 0), 0) || 1;
+      let e = 0, er = 0, n = 0;
+      types.forEach(t => {
+        const w = (+t.appearance_rate || 0) / tot; let ee = 0, rr = 0;
+        Object.values(t.slots || {}).forEach(sl => Object.keys(sl).forEach(code => { const st1 = stat(code); if (!st1.t) return; const v = sl[code] / 100 * st1.m / st1.t; ee += v; if (!PR_DIA.includes(code)) rr += v; }));
+        e += w * ee; er += w * rr; n += w * (+t.cards || 0);
+      });
+      out.push({ set: x, pack: pn, e, er, n, miss: pool.filter(c => !owned.has(cid(c))).length, total: pool.length, est: pr.est, from: pr.from });
+    });
+  });
+  return out.sort((a, b) => b.e - a.e || b.miss - a.miss);
+}
+function adviceHtml(adv) {
+  const rows = adv.map((a, i) => '<div style="margin:12px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + (a.e > 0 ? (i + 1) + ". " : "") + esc(setName(a.set) + " · " + a.pack) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + (a.miss ? "≈ " + a.e.toFixed(2) + " нов." : "собрано") + "</span></div>" + meter(a.e, a.n || 1) +
+    '<div class="prog" style="margin:4px 0 0;font-size:12px">' + (a.miss ? "из " + a.n.toFixed(1) + " карт в паке · редких ≈ " + a.er.toFixed(2) + " · не хватает " + a.miss + " из " + a.total : "в этом паке есть все карточки") + (a.est ? " · шансы сета " + a.from + " (для этого сета таблицы нет)" : "") + "</div></div>").join("");
+  return rows + '<p class="prog" style="font-size:12px">Приблизительный расчёт: внутри одной редкости карточки пака считаются равновероятными, повторы в одном паке не учитываются. «Редкие» это всё, кроме ромбов (C, U, R, RR). Шансы взяты из pullRates.json.</p>';
+}
 function drawStats(body) {
   const row = (name, a, b, left) => '<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(name) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + a + " / " + b + " · " + pct(a, b) + "%" + (left ? " · ещё " + (b - a) : "") + "</span></div>" + meter(a, b) + "</div>";
   const got = l => l.filter(c => owned.has(cid(c))).length;
@@ -363,7 +411,9 @@ function drawStats(body) {
   const ms = []; Object.keys(MIS).forEach(k => MIS[k].forEach(x => ms.push({ k, x, s: mst(k, x) })));
   const md = ms.filter(o => o.s.done).length;
   let sp = 0, spT = 0; dex.forEach(d => { const p = prog(d); if (p.t) { spT++; if (p.h) sp++; } });
-  let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length, "копий: " + cards.reduce((a, c) => a + qty(cid(c)), 0)) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + "</div>";
+  let adv = [], best = null; try { adv = packAdvice(); best = adv.find(a => a.e > 0); } catch (e) { adv = []; }
+  let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length, "копий: " + cards.reduce((a, c) => a + qty(cid(c)), 0)) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + (best ? '<div class="hc"><small>Лучший пак сейчас</small><div class="big">≈' + best.e.toFixed(1) + '</div><div class="sub">' + esc(setName(best.set) + " · " + best.pack) + " · новых карт</div></div>" : "") + "</div>";
+  if (adv.length) out += acc("🎯", "Какой пак открывать", "ожидаемое число новых карт", adviceHtml(adv)).replace('<details class="acc">', '<details class="acc" open>');
   const sw = sets.filter(x => cards.some(c => c.set === x.code));
   out += acc("🗂️", "Карточки по сетам", sw.length + " сетов", sw.map(x => { const l = cards.filter(c => c.set === x.code); return row(setName(x) + " (" + x.code + ")", got(l), l.length); }).join(""));
   const prow = [];
@@ -399,8 +449,6 @@ function drawStats(body) {
   out += acc("💾", "Копия данных", last ? "последняя копия: " + new Date(last).toLocaleDateString("ru-RU") : "копии ещё не было", '<p class="prog">Отметки, копии, желаемое и переносы миссий хранятся только в этом браузере, в репозитории их нет. Чтобы не потерять их (очистка Safari, смена устройства), время от времени сохраняй копию и убери её в «Файлы» или iCloud.</p><div class="bk"><button class="more" id="bkx">Сохранить копию</button><label class="more">Восстановить из копии<input type="file" id="bki" accept="application/json" hidden></label></div>');
   const days = last ? (Date.now() - new Date(last).getTime()) / 864e5 : 1e9;
   if (owned.size > 0 && days > 30) out = '<div class="note">' + (last ? "Копию данных не сохраняли " + Math.floor(days) + " дн." : "Копия данных ещё не сохранялась") + ". Сохрани её внизу, в разделе «Копия данных».</div>" + out;
-  out += acc("🔧", "Проверка данных", dataFixes.length ? "исправлено автоматически: " + dataFixes.length : "исправлений не потребовалось", dataFixes.length ? '<p class="prog">Эти названия и номера в твоём cards.json приложение исправляет само при каждой загрузке (сам файл не меняется).</p>' + dataFixes.map(f => '<div class="irow"><span>' + esc(f[0]) + "</span><b>" + esc(f[1]) + " → " + esc(f[2]) + "</b></div>").join("") : '<p class="prog">Названия и номера в порядке.</p>');
-  out += acc("ℹ️", "Источники данных", "откуда всё взято", '<p class="prog">Неофициальный фанатский проект для личного некоммерческого использования, не связан с The Pokémon Company.</p><div class="irow"><span>Карточки, сеты, паки, картинки</span><b>pokemon-tcg-pocket-database (flibustier), лицензия MIT</b></div><div class="irow"><span>Задания коллекций</span><b>Bulbapedia, лицензия CC BY-NC-SA 2.5</b></div><div class="irow"><span>Список покемонов и их картинки</span><b>PokeAPI и PokeAPI/sprites</b></div><p class="prog">Pokémon и изображения карточек принадлежат Nintendo, Creatures, GAME FREAK, The Pokémon Company и DeNA.</p>');
   body.innerHTML = out;
   const bx = $("#bkx"), bi = $("#bki"); if (bx) bx.onclick = exportData; if (bi) bi.onchange = importData;
 }
@@ -431,19 +479,38 @@ function afterChange(i) {
   if (tab === "cards" && st.show === "all" && !st.wish && !st.alt) {
     const l = cf(), h = l.filter(c => owned.has(cid(c))).length;
     $("#prog").innerHTML = "Собрано " + h + " из " + l.length + meter(h, l.length);
-  } else draw();
+  } else if (st.open) updatePkProg(); else draw();
   if (st.cardOpen) renderCard();
 }
 function toggleFlag(set, i) { set.has(i) ? set.delete(i) : set.add(i); saveFlags(); afterChange(i); }
 const toggleCard = i => { setQty(i, qty(i) ? 0 : 1); afterChange(i); };
-function hideCard() { st.cardOpen = ""; const v = $("#cv"); if (v) v.hidden = true; if (document.body && document.body.style) document.body.style.overflow = ""; }
+function lockScroll() { if (document.body && document.body.style) document.body.style.overflow = (st.cardOpen || st.open) ? "hidden" : ""; }
+function hideCard() { st.cardOpen = ""; const v = $("#cv"); if (v) v.hidden = true; lockScroll(); }
 function openCard(i) {
-  st.cardOpen = i; renderCard();
-  if (document.body && document.body.style) document.body.style.overflow = "hidden";
+  st.cardOpen = i; renderCard(); lockScroll();
   try { history.pushState({ v: "card" }, ""); } catch (e) {}
 }
 function closeCard() { if (typeof history !== "undefined" && history.state && history.state.v === "card") history.back(); else hideCard(); }
-window.addEventListener("popstate", () => { if (st.cardOpen) hideCard(); else if (st.open) { st.open = 0; build(); window.scrollTo(0, st.scroll || 0); } });
+/* окно покемона поверх списка: сам список не перерисовывается, поэтому прокрутка не сбрасывается */
+function updatePkProg() { const el = $("#dprog"); if (!el) return; const l = spMap.get(st.open) || [], h = l.filter(c => owned.has(cid(c))).length; el.innerHTML = l.length ? "Собрано " + h + " из " + l.length + meter(h, l.length) : "Для этого покемона нет карточек в TCG Pocket"; }
+function renderPk() {
+  const v = $("#pv"), d = dex.find(x => x.id === st.open);
+  if (!d) { v.hidden = true; return; }
+  const f = fav.has(d.id), l = (spMap.get(d.id) || []).slice().sort(cmpCard);
+  v.innerHTML = '<div style="max-width:1000px;margin:0 auto"><button class="more" id="pvback" style="margin:0 0 10px">← Назад</button>' +
+    '<div class="dhead"><img src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)" alt="">' +
+    '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + escG(d.name) + ' <span class="prog">#' + d.id + '</span></div><div class="prog" id="dprog"></div></div>' +
+    '<button class="heart' + (f ? " on" : "") + '" id="hrt">' + (f ? "♥" : "♡") + '</button></div><div class="grid">' + l.map(tile).join("") + "</div></div>";
+  updatePkProg(); v.hidden = false;
+}
+function openPk(id) { st.open = id; renderPk(); lockScroll(); try { history.pushState({ v: "pk" }, ""); } catch (e) {} }
+function hidePk() {
+  const id = st.open; st.open = 0; const v = $("#pv"); if (v) v.hidden = true; lockScroll();
+  const d = dex.find(x => x.id === id), el = document.querySelector('.pk[data-d="' + id + '"]');
+  if (d && el) { if (st.favOnly && !fav.has(id)) el.remove(); else el.outerHTML = pkTile(d); }
+}
+function closePk() { if (typeof history !== "undefined" && history.state && history.state.v === "pk") history.back(); else hidePk(); }
+window.addEventListener("popstate", () => { if (st.cardOpen) hideCard(); else if (st.open) hidePk(); });
 function renderCard() {
   const id = st.cardOpen, v = $("#cv"), c = cards.find(x => cid(x) === id);
   if (!c) { v.hidden = true; return; }
@@ -506,14 +573,7 @@ function build() {
     $("#falt").onclick = e => { st.alt = !st.alt; st.cl = 240; e.currentTarget.classList.toggle("on", st.alt); draw(); };
     $("#fshow").onclick = e => { const v = e.target.dataset.v; if (v) { st.show = v; build(); } };
   } else if (tab === "species") {
-    if (st.open) {
-      const d = dex.find(x => x.id === st.open) || { id: st.open, name: "#" + st.open };
-      const f = fav.has(d.id);
-      m.innerHTML = '<button class="more" id="back" style="margin:0 0 10px">← Назад</button>' +
-        '<div class="dhead"><img src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)" alt="">' +
-        '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + escG(d.name) + ' <span class="prog">#' + d.id + '</span></div><div class="prog" id="dprog"></div></div>' +
-        '<button class="heart' + (f ? " on" : "") + '" id="hrt">' + (f ? "♥" : "♡") + '</button></div><div class="grid" id="body"></div>';
-    } else if (!dex.length) {
+    if (!dex.length) {
       m.innerHTML = '<p class="empty">Не удалось загрузить список покемонов. Нужен интернет при первом запуске, обнови страницу.</p>';
     } else {
       const opt = (arr, cur) => arr.map(x => '<option value="' + x[0] + '"' + (String(cur) === String(x[0]) ? " selected" : "") + ">" + x[1] + "</option>").join("");
@@ -556,11 +616,7 @@ function draw() {
     body.className = "grid";
     const mb = $("#moreCards"); if (mb && typeof IntersectionObserver !== "undefined") { if (window.__io) window.__io.disconnect(); window.__io = new IntersectionObserver(en => { if (en[0].isIntersecting) { st.cl += 240; draw(); } }); window.__io.observe(mb); }
   } else if (tab === "species") {
-    if (st.open) {
-      const l = (spMap.get(st.open) || []).slice().sort(cmpCard), h = l.filter(c => owned.has(cid(c))).length;
-      $("#dprog").innerHTML = l.length ? "Собрано " + h + " из " + l.length + meter(h, l.length) : "Для этого покемона нет карточек в TCG Pocket";
-      body.innerHTML = l.map(tile).join("");
-    } else if (dex.length) {
+    if (dex.length) {
       const list = dex.filter(d => {
         if (st.gen && d.gen !== +st.gen) return false;
         if (st.favOnly && !fav.has(d.id)) return false;
@@ -612,7 +668,7 @@ function draw() {
   }
 }
 
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeCard(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { if (st.cardOpen) closeCard(); else if (st.open) closePk(); } });
 document.addEventListener("click", e => {
   const mv = e.target.closest("[data-mv]");
   const fd = !mv && e.target.closest("[data-fold]");
@@ -621,9 +677,9 @@ document.addEventListener("click", e => {
   const mb = e.target.closest("[data-mk]");
   if (mb) { const k = mb.dataset.mk, x = MIS[k][+mb.dataset.mi], id = mid(k, x), a = mb.dataset.a, cur = +mstate[id] || 0, mx = x.need || 1; mstate[id] = a === "+" ? Math.min(cur + 1, mx) : a === "-" ? Math.max(0, cur - 1) : (cur ? 0 : 1); saveM(); draw(); return; }
   const pk = e.target.closest(".pk");
-  if (pk) { st.scroll = window.scrollY || 0; st.open = +pk.dataset.d; build(); window.scrollTo(0, 0); try { history.pushState({ v: "pk" }, ""); } catch (e) {} return; }
-  if (e.target.closest("#back")) { if (typeof history !== "undefined" && history.state && history.state.v === "pk") history.back(); else { st.open = 0; build(); window.scrollTo(0, st.scroll || 0); } return; }
-  if (e.target.closest("#hrt")) { fav.has(st.open) ? fav.delete(st.open) : fav.add(st.open); saveFav(); build(); return; }
+  if (pk) { openPk(+pk.dataset.d); return; }
+  if (e.target.closest("#pvback")) { closePk(); return; }
+  if (e.target.closest("#hrt")) { fav.has(st.open) ? fav.delete(st.open) : fav.add(st.open); saveFav(); renderPk(); return; }
   const sq = e.target.closest("[data-q]");
   if (sq) { const id = sq.closest(".card").dataset.id; setQty(id, qty(id) + (sq.dataset.q === "+" ? 1 : -1)); afterChange(id); return; }
   if (e.target.closest("#cvm")) { setQty(st.cardOpen, qty(st.cardOpen) - 1); afterChange(st.cardOpen); return; }
@@ -649,7 +705,8 @@ $("#nav").onclick = e => {
   const msg = t => { $("#main").innerHTML = '<p class="empty">' + t + "</p>"; };
   window.addEventListener("error", e => { if (!cards.length) msg("Ошибка в приложении: " + esc(e.message)); });
   try {
-    const [c0, s0, slugs] = await Promise.all([getJson(BASE_URLS), getJson(SETS_URLS).catch(() => ({})), loadDex()]);
+    const [c0, s0, slugs, pr0] = await Promise.all([getJson(BASE_URLS), getJson(SETS_URLS).catch(() => ({})), loadDex(), getJson(PR_URLS).catch(() => null)]);
+    PR = pr0 && typeof pr0 === "object" && !Array.isArray(pr0) ? pr0 : null;
     cards = asArr(c0).map(x => Object.assign({}, x, { poke: x.type === "pokemon", packs: x.packs || [], inum: x.number, name: cleanName(x.name) }));
     dataFixes = [];
     asArr(c0).forEach((x, i) => { if (cards[i].name !== x.name) dataFixes.push([cards[i].set + " " + cards[i].number, x.name, cards[i].name]); });
@@ -666,6 +723,7 @@ $("#nav").onclick = e => {
     if (st.set && !sets.some(x => x.code === st.set)) st.set = "";
     if (st.mset && !sets.some(x => x.code === st.mset)) st.mset = "";
     if (st.pack && !sets.some(x => x.code === st.pack.split("|")[0])) st.pack = "";
+    try { if (dataFixes.length) console.info("Автоисправления данных (сам файл не меняется):", dataFixes); } catch (e) {}
     document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x.dataset.t === tab));
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
     const nw = sets.find(x => cards.some(c => c.set === x.code));
