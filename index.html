@@ -2,10 +2,16 @@
 <html lang="ru">
 <!--
   Неофициальный фанатский проект для личного некоммерческого использования, не связан с The Pokémon Company.
+  Данные: flibustier/pokemon-tcg-pocket-database, PocketDecks/pokemon-tcg-pocket-cards.
   Источники данных:
    - карточки, сеты, паки, картинки: pokemon-tcg-pocket-database (flibustier), лицензия MIT
+     https://github.com/flibustier/pokemon-tcg-pocket-database
+   - типы карт и часть данных: PocketDecks/pokemon-tcg-pocket-cards, лицензия AGPL-3.0-or-later
+     https://github.com/PocketDecks/pokemon-tcg-pocket-cards
    - задания коллекций (missions.js): Bulbapedia, лицензия CC BY-NC-SA 2.5
+     https://bulbapedia.bulbagarden.net/wiki/Mission_(TCG_Pocket)
    - список покемонов и их картинки: PokeAPI и PokeAPI/sprites
+     https://pokeapi.co
   Pokémon и изображения карточек принадлежат Nintendo, Creatures, GAME FREAK, The Pokémon Company и DeNA.
 -->
 <head>
@@ -110,12 +116,12 @@ input{flex:1;min-width:140px}
 .gt{margin-top:8px;font-weight:700}.ind{padding-left:12px;border-left:2px solid var(--ln);margin-left:2px}.bk{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}.bk .more{margin:0}
 @media(max-width:480px){.rb{width:36px;height:36px;font-size:18px}.ctl .qty{padding:0 8px}.panel.sm.ctl{gap:8px 10px}}
 .note{background:var(--sf);border:1px solid #e8a900;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+.src{max-width:1200px;margin:0 auto;padding:6px 14px 28px;font-size:12px;color:var(--mt);text-align:center}.src a{color:inherit}
 </style>
 </head>
 <body>
 <header>
-  <div id="info" style="font-size:12px;color:var(--mt);float:right;margin-top:6px"></div>
-  <h1>Моя коллекция <small style="font-weight:400;color:var(--mt);font-size:12px">v26</small></h1>
+  <h1>Моя коллекция</h1>
   <nav id="nav">
     <button data-t="cards" class="on">Карточки</button>
     <button data-t="species">Покемоны</button>
@@ -124,10 +130,11 @@ input{flex:1;min-width:140px}
   </nav>
 </header>
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
+<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v29</footer>
 
 <div id="pv" hidden></div>
 <div id="cv" hidden></div>
-<script src="missions.js?v=26"></script>
+<script src="missions.js?v=27"></script>
 <script>
 /* Данные и картинки берутся из репозитория flibustier/pokemon-tcg-pocket-database */
 const PKG = "https://cdn.jsdelivr.net/npm/pokemon-tcg-pocket-database";
@@ -413,7 +420,7 @@ function drawStats(body) {
   let sp = 0, spT = 0; dex.forEach(d => { const p = prog(d); if (p.t) { spT++; if (p.h) sp++; } });
   let adv = [], best = null; try { adv = packAdvice(); best = adv.find(a => a.e > 0); } catch (e) { adv = []; }
   let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length, "копий: " + cards.reduce((a, c) => a + qty(cid(c)), 0)) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + (best ? '<div class="hc"><small>Лучший пак сейчас</small><div class="big">≈' + best.e.toFixed(1) + '</div><div class="sub">' + esc(setName(best.set) + " · " + best.pack) + " · новых карт</div></div>" : "") + "</div>";
-  if (adv.length) out += acc("🎯", "Какой пак открывать", "ожидаемое число новых карт", adviceHtml(adv)).replace('<details class="acc">', '<details class="acc" open>');
+  if (adv.length) out += acc("🎯", "Какой пак открывать", "ожидаемое число новых карт", adviceHtml(adv));
   const sw = sets.filter(x => cards.some(c => c.set === x.code));
   out += acc("🗂️", "Карточки по сетам", sw.length + " сетов", sw.map(x => { const l = cards.filter(c => c.set === x.code); return row(setName(x) + " (" + x.code + ")", got(l), l.length); }).join(""));
   const prow = [];
@@ -637,6 +644,7 @@ function draw() {
   } else if (tab === "stats") {
     drawStats(body);
   } else {
+    if (!Object.keys(MIS).length) { body.innerHTML = '<p class="empty">Миссии не загружены. Проверь, что файл missions.js лежит в репозитории рядом с index.html.</p>'; return; }
     const k = (st.mset || "").toLowerCase(), all = MIS[k] || [];
     const items = all.map((x, i) => ({ x, i, s: mst(k, x) })).filter(o => isSec(k, o.x) === st.secret);
     const active = items.filter(o => !o.s.done), fin = items.filter(o => o.s.done);
@@ -727,7 +735,6 @@ $("#nav").onclick = e => {
     document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x.dataset.t === tab));
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
     const nw = sets.find(x => cards.some(c => c.set === x.code));
-    $("#info").textContent = "Карточек: " + cards.length + " · сетов: " + sets.filter(x => cards.some(c => c.set === x.code)).length + (nw ? " · новейший: " + nw.code : "") + " · миссий: " + Object.keys(MIS).reduce((a, k) => a + MIS[k].length, 0) + " (секретных: " + Object.keys(MIS).reduce((a, k) => a + MIS[k].filter(m => isSec(k, m)).length, 0) + ")";
     build();
   } catch (e) {
     msg("Не удалось загрузить данные.<br><small>" + esc(e.message || e) + "</small><br>Проверь интернет и обнови страницу.");
