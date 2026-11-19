@@ -130,7 +130,7 @@ input{flex:1;min-width:140px}
   </nav>
 </header>
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
-<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v29</footer>
+<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v30</footer>
 
 <div id="pv" hidden></div>
 <div id="cv" hidden></div>
@@ -409,10 +409,23 @@ function adviceHtml(adv) {
     '<div class="prog" style="margin:4px 0 0;font-size:12px">' + (a.miss ? "из " + a.n.toFixed(1) + " карт в паке · редких ≈ " + a.er.toFixed(2) + " · не хватает " + a.miss + " из " + a.total : "в этом паке есть все карточки") + (a.est ? " · шансы сета " + a.from + " (для этого сета таблицы нет)" : "") + "</div></div>").join("");
   return rows + '<p class="prog" style="font-size:12px">Приблизительный расчёт: внутри одной редкости карточки пака считаются равновероятными, повторы в одном паке не учитываются. «Редкие» это всё, кроме ромбов (C, U, R, RR). Шансы взяты из pullRates.json.</p>';
 }
+const ACCKEY = "tcgp-acc-v1";
+let accOpen = {};
+try { accOpen = JSON.parse(localStorage.getItem(ACCKEY) || "{}") || {}; } catch (e) {}
+document.addEventListener("toggle", e => {
+  const d = e.target; if (!d || !d.classList || !d.classList.contains("acc")) return;
+  accOpen[d.dataset.k] = !!d.open; try { localStorage.setItem(ACCKEY, JSON.stringify(accOpen)); } catch (er) {}
+}, true);
+/* при раскрытии и сворачивании блока его заголовок остаётся на том же месте экрана, страница не прыгает */
+document.addEventListener("click", e => {
+  const sm = e.target.closest ? e.target.closest("summary") : null; if (!sm || typeof requestAnimationFrame === "undefined") return;
+  const top = sm.getBoundingClientRect().top;
+  requestAnimationFrame(() => requestAnimationFrame(() => { const d = sm.getBoundingClientRect().top - top; if (Math.abs(d) > 1) window.scrollBy(0, d); }));
+}, true);
 function drawStats(body) {
   const row = (name, a, b, left) => '<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(name) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + a + " / " + b + " · " + pct(a, b) + "%" + (left ? " · ещё " + (b - a) : "") + "</span></div>" + meter(a, b) + "</div>";
   const got = l => l.filter(c => owned.has(cid(c))).length;
-  const acc = (icon, title, sub, inner) => '<details class="acc"><summary><span class="ai">' + icon + '</span><span class="at"><b>' + title + "</b><small>" + sub + '</small></span><span class="chv">›</span></summary><div class="accb">' + inner + "</div></details>";
+  const acc = (icon, title, sub, inner) => '<details class="acc" data-k="' + esc(title) + '"' + (accOpen[title] ? " open" : "") + '><summary><span class="ai">' + icon + '</span><span class="at"><b>' + title + "</b><small>" + sub + '</small></span><span class="chv">›</span></summary><div class="accb">' + inner + "</div></details>";
   const grpBy = (fn, lab, order) => { const m = new Map(); cards.forEach(c => { const k = fn(c); if (k == null) return; if (!m.has(k)) m.set(k, []); m.get(k).push(c); }); return order.filter(k => m.has(k)).map(k => row(lab[k] || String(k), got(m.get(k)), m.get(k).length)).join(""); };
   const hc = (title, a, b, note) => '<div class="hc"><small>' + title + '</small><div class="big">' + pct(a, b) + '%</div><div class="sub">' + a + " / " + b + (note ? " · " + note : "") + "</div>" + meter(a, b) + "</div>";
   const ms = []; Object.keys(MIS).forEach(k => MIS[k].forEach(x => ms.push({ k, x, s: mst(k, x) })));
