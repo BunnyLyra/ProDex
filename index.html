@@ -51,6 +51,7 @@ input{flex:1;min-width:140px}
 .card.on .im{border-color:var(--ok)}
 .card .nm{display:block;font-size:12px;margin-top:4px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card .no{display:block;font-size:11px;color:var(--mt)}
+.card .ns{margin-left:5px;font-size:11px;font-weight:400;color:#e8a900}.card .ns[hidden]{display:none}
 .grp{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:12px;margin-bottom:12px}
 .grp h3{margin:0;font-size:16px;display:flex;justify-content:space-between;gap:8px}
 .grp h3 span{color:var(--mt);font-weight:500;font-size:14px}
@@ -495,6 +496,7 @@ function afterChange(i) {
     x.classList.toggle("on", q > 0);
     const f = sel => x.querySelector ? x.querySelector(sel) : null, k = f(".ck"), b = f(".qb"), z = f(".stp b");
     if (k) k.textContent = q > 0 ? "✓" : ""; if (b) b.textContent = q > 1 ? "×" + q : ""; if (z) z.textContent = q;
+    const ns = f(".ns"); if (ns) ns.hidden = !alt.has(i);
   });
   if (tab === "cards" && st.show === "all" && !st.wish && !st.alt) {
     const l = cf(), h = l.filter(c => owned.has(cid(c))).length;
@@ -520,7 +522,7 @@ function renderPk() {
   v.innerHTML = '<div style="max-width:1000px;margin:0 auto"><button class="more" id="pvback" style="margin:0 0 10px">← Назад</button>' +
     '<div class="dhead"><img src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)" alt="">' +
     '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + escG(d.name) + ' <span class="prog">#' + d.id + '</span></div><div class="prog" id="dprog"></div></div>' +
-    '<button class="heart' + (f ? " on" : "") + '" id="hrt">' + (f ? "♥" : "♡") + '</button></div><div class="grid">' + l.map(tile).join("") + "</div></div>";
+    '<button class="heart' + (f ? " on" : "") + '" id="hrt">' + (f ? "♥" : "♡") + '</button></div><div class="grid">' + l.map(c => tile(c, { star: 1 })).join("") + "</div></div>";
   updatePkProg(); v.hidden = false;
 }
 function openPk(id) { st.open = id; renderPk(); lockScroll(); try { history.pushState({ v: "pk" }, ""); } catch (e) {} }
@@ -566,7 +568,7 @@ function tile(c, o) {
   const id = cid(c), q = qty(id);
   return '<div class="card' + (q ? " on" : "") + '" data-id="' + id + '">' +
     '<span class="im"><img loading="lazy" alt="" src="' + IMG_SRC[pref](c.set, c.inum != null ? c.inum : c.number, c.image) + '" data-s="' + esc(c.set) + '" data-n="' + (c.inum != null ? c.inum : c.number) + '" data-f="' + esc(c.image || "") + '" data-k="' + pref + '" onerror="imgErr(this)" onload="imgOk(this)"><button class="ck" aria-label="Отметить">' + (q ? "✓" : "") + '</button><span class="qb">' + (q > 1 ? "×" + q : "") + '</span></span>' +
-    '<span class="nm">' + esc(c.name) + '</span><span class="no">' + c.set + " · " + c.number + " · " + c.rarity + "</span>" +
+    '<span class="nm">' + esc(c.name) + '</span><span class="no">' + c.set + " · " + c.number + " · " + c.rarity + (o && o.star ? '<b class="ns"' + (alt.has(id) ? "" : " hidden") + ' title="Есть на другом аккаунте">★</b>' : "") + "</span>" +
     (o && o.stp ? '<span class="stp"><button data-q="-">−</button><b>' + q + '</b><button data-q="+">+</button></span>' : "") + "</div>";
 }
 function setSelect(id, val, withAll) {
