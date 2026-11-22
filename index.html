@@ -121,10 +121,8 @@ input{flex:1;min-width:140px}
 @media(min-width:700px){#pv .grid{grid-template-columns:repeat(5,1fr)}}
 .tb .prog{margin:2px 0 8px}
 #pv{padding-top:0;touch-action:pan-y}
-.pvh{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;background:var(--bg);margin:0 -14px 10px;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 8px;border-bottom:1px solid var(--ln)}
-.pvh .more{margin:0;flex:none;padding:8px 12px}.pvs{width:56px;height:56px;object-fit:contain;flex:none}
-.pvt{flex:1;min-width:0}.pvn{font-size:20px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pvt .prog{margin:0}.pvt .meter{margin-top:4px}
-.pvh .heart{width:42px;height:42px;flex:none}
+.pvh{position:sticky;top:0;z-index:3;background:var(--bg);margin:0 -14px 10px;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 8px;border-bottom:1px solid var(--ln)}
+.pvh .more{margin:0}
 .ssort{margin:10px 0 2px}.ssort button{flex:1;font-size:13px;padding:8px 6px}
 </style>
 </head>
@@ -139,7 +137,7 @@ input{flex:1;min-width:140px}
   </nav>
 </header>
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
-<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v34</footer>
+<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v35</footer>
 
 <div id="pv" hidden></div>
 <div id="cv" hidden></div>
@@ -539,9 +537,9 @@ function renderPk() {
   const v = $("#pv"), d = dex.find(x => x.id === st.open);
   if (!d) { v.hidden = true; return; }
   const f = fav.has(d.id), l = (spMap.get(d.id) || []).slice().sort(cmpCard);
-  v.innerHTML = '<div style="max-width:1000px;margin:0 auto"><div class="pvh"><button class="more" id="pvback">← Назад</button>' +
-    '<img class="pvs" src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)" alt="">' +
-    '<div class="pvt"><div class="pvn">' + escG(d.name) + ' <span class="prog">#' + d.id + '</span></div><div class="prog" id="dprog"></div></div>' +
+  v.innerHTML = '<div style="max-width:1000px;margin:0 auto"><div class="pvh"><button class="more" id="pvback">← Назад</button></div>' +
+    '<div class="dhead"><img src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)" alt="">' +
+    '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + escG(d.name) + ' <span class="prog">#' + d.id + '</span></div><div class="prog" id="dprog"></div></div>' +
     '<button class="heart' + (f ? " on" : "") + '" id="hrt">' + (f ? "♥" : "♡") + '</button></div><div class="grid">' + l.map(c => tile(c, { star: true })).join("") + "</div></div>";
   updatePkProg(); v.hidden = false;
 }
@@ -641,8 +639,9 @@ function build() {
   } else {
     if (!st.mset && sets.length) st.mset = (sets.find(x => MIS[x.code.toLowerCase()]) || sets[0]).code;
     m.innerHTML = '<div class="tb"><div class="bar">' + setSelect("fset", st.mset, false) +
-      '</div></div><div id="body"></div>';
+      '<div class="seg" id="fsec"><button data-v="0"' + (!st.secret ? ' class="on"' : '') + '>Обычные</button><button data-v="1"' + (st.secret ? ' class="on"' : '') + '>Секретные</button></div></div></div><div id="body"></div>';
     $("#fset").onchange = e => { st.mset = e.target.value; draw(); };
+    $("#fsec").onclick = e => { const v = e.target.dataset.v; if (v) { st.secret = v === "1"; build(); } };
   }
   draw();
   setHH();
@@ -687,7 +686,8 @@ function draw() {
   } else {
     if (!Object.keys(MIS).length) { body.innerHTML = '<p class="empty">Миссии не загружены. Проверь, что файл missions.js лежит в репозитории рядом с index.html.</p>'; return; }
     const k = (st.mset || "").toLowerCase(), all = MIS[k] || [];
-    const items = all.map((x, i) => ({ x, i, s: mst(k, x) }));
+    const items = all.map((x, i) => ({ x, i, s: mst(k, x) })).filter(o => isSec(k, o.x) === st.secret);
+    const active = items.filter(o => !o.s.done), fin = items.filter(o => o.s.done);
     const byId = new Map(cards.map(c => [cid(c), c]));
     const one = o => {
       const x = o.x, s = o.s, at = ' data-mk="' + k + '" data-mi="' + o.i + '"';
@@ -709,12 +709,10 @@ function draw() {
         (s.t > 1 ? meter(s.h, s.t) : "") +
         (col ? "" : (x.reward ? '<p class="prog" style="margin:6px 0 0">Награда: ' + esc(x.reward) + "</p>" : "") + (x.note ? '<p class="prog" style="margin:6px 0 0">' + esc(x.note) + "</p>" : "") + (x.guess ? '<p class="prog" style="margin:6px 0 0">⚠ Состав восстановлен по неполному тексту источника, сверь с игрой.</p>' : "") + '<div style="margin-top:10px">' + inner + "</div>") + "</section>";
     };
-    const doneN = items.filter(o => o.s.done).length;
-    const sect = (title, list) => { if (!list.length) return ""; const a = list.filter(o => !o.s.done), f = list.filter(o => o.s.done); return '<div class="gh">' + title + "<span>" + f.length + " / " + list.length + "</span></div>" + a.map(one).join("") + (f.length ? '<div class="gh" style="font-size:15px">Выполнено <span>' + f.length + "</span></div>" + f.map(one).join("") : ""); };
-    body.innerHTML = items.length ? '<div class="prog">Выполнено миссий: ' + doneN + " из " + items.length + " (" + pct(doneN, items.length) + "%)" + meter(doneN, items.length) + "</div>" +
-      sect("Обычные", items.filter(o => !isSec(k, o.x))) + sect("Секретные", items.filter(o => isSec(k, o.x))) +
+    body.innerHTML = items.length ? '<div class="prog">Выполнено миссий: ' + fin.length + " из " + items.length + " (" + pct(fin.length, items.length) + "%)" + meter(fin.length, items.length) + "</div>" +
+      active.map(one).join("") + (fin.length ? '<div class="gh" style="font-size:17px">Выполнено <span>' + fin.length + "</span></div>" + fin.map(one).join("") : "") +
       '<p class="prog">В игре некоторые миссии засчитывают любую версию карты, поэтому сверяйся с самой миссией.</p>' :
-      '<p class="empty">Для этого сета пока нет миссий. Они хранятся в файле missions.js.</p>';
+      '<p class="empty">Для этого сета пока нет ' + (st.secret ? "секретных" : "обычных") + " миссий. Они хранятся в файле missions.js.</p>";
   }
 }
 
