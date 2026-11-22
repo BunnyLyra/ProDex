@@ -119,6 +119,13 @@ input{flex:1;min-width:140px}
 .src{max-width:1200px;margin:0 auto;padding:6px 14px 28px;font-size:12px;color:var(--mt);text-align:center}.src a{color:inherit}
 .card .stg{position:absolute;right:6px;bottom:9px;font-size:20px;line-height:1;color:#e8a900;pointer-events:none}
 @media(min-width:700px){#pv .grid{grid-template-columns:repeat(5,1fr)}}
+.tb .prog{margin:2px 0 8px}
+#pv{padding-top:0;touch-action:pan-y}
+.pvh{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;background:var(--bg);margin:0 -14px 10px;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 8px;border-bottom:1px solid var(--ln)}
+.pvh .more{margin:0;flex:none;padding:8px 12px}.pvs{width:56px;height:56px;object-fit:contain;flex:none}
+.pvt{flex:1;min-width:0}.pvn{font-size:20px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pvt .prog{margin:0}.pvt .meter{margin-top:4px}
+.pvh .heart{width:42px;height:42px;flex:none}
+.ssort{margin:10px 0 2px}.ssort button{flex:1;font-size:13px;padding:8px 6px}
 </style>
 </head>
 <body>
@@ -132,7 +139,7 @@ input{flex:1;min-width:140px}
   </nav>
 </header>
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
-<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v33</footer>
+<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v34</footer>
 
 <div id="pv" hidden></div>
 <div id="cv" hidden></div>
@@ -307,8 +314,8 @@ const SKEY = "tcgp-sec-v2";
 let secOv = {};
 try { secOv = JSON.parse(localStorage.getItem(SKEY) || "{}") || {}; } catch (e) {}
 const saveSec = () => { try { localStorage.setItem(SKEY, JSON.stringify(secOv)); } catch (e) {} };
-const isSec = (k, x) => { const v = secOv[mid(k, x)]; return v === undefined ? !!x.secret : !!v; };
-const pct = (h, t) => t ? Math.round(h / t * 100) : 0;
+const isSec = (k, x) => !!x.secret;
+const pct = (h, t) => { if (!t) return 0; if (h >= t) return 100; const p = h / t * 100; return p >= 99 ? Math.floor(p * 10) / 10 : Math.round(p); };
 const QKEY = "tcgp-qty-v1";
 let copies = {};
 try { copies = JSON.parse(localStorage.getItem(QKEY) || "{}") || {}; } catch (e) {}
@@ -424,27 +431,46 @@ document.addEventListener("click", e => {
   const top = sm.getBoundingClientRect().top;
   requestAnimationFrame(() => requestAnimationFrame(() => { const d = sm.getBoundingClientRect().top - top; if (Math.abs(d) > 1) window.scrollBy(0, d); }));
 }, true);
+const statRow = (name, a, b, left) => '<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(name) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + a + " / " + b + " · " + pct(a, b) + "%" + (left ? " · ещё " + (b - a) : "") + "</span></div>" + meter(a, b) + "</div>";
+const ASKEY = "tcgp-accsort-v1";
+let accSort = {}, SORTD = {};
+try { accSort = JSON.parse(localStorage.getItem(ASKEY) || "{}") || {}; } catch (e) {}
+function rowsOf(key) {
+  const m = accSort[key] || "", d = (SORTD[key] || []).slice();
+  if (m) d.sort((x, y) => { const rx = x.b ? x.a / x.b : 0, ry = y.b ? y.a / y.b : 0; return m === "asc" ? rx - ry : ry - rx; });
+  return d.map(r => statRow(r.n, r.a, r.b, r.left)).join("");
+}
+const sortBar = key => '<div class="seg ssort" data-sk="' + key + '">' + [["", "По порядку"], ["asc", "С меньшего"], ["desc", "С большего"]].map(x => '<button data-m="' + x[0] + '"' + ((accSort[key] || "") === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div>";
+const sortable = (key, data) => { SORTD[key] = data; return sortBar(key) + '<div class="srows">' + rowsOf(key) + "</div>"; };
 function drawStats(body) {
-  const row = (name, a, b, left) => '<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(name) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + a + " / " + b + " · " + pct(a, b) + "%" + (left ? " · ещё " + (b - a) : "") + "</span></div>" + meter(a, b) + "</div>";
+  const row = statRow;
   const got = l => l.filter(c => owned.has(cid(c))).length;
   const acc = (icon, title, sub, inner) => '<details class="acc" data-k="' + esc(title) + '"' + (accOpen[title] ? " open" : "") + '><summary><span class="ai">' + icon + '</span><span class="at"><b>' + title + "</b><small>" + sub + '</small></span><span class="chv">›</span></summary><div class="accb">' + inner + "</div></details>";
-  const grpBy = (fn, lab, order) => { const m = new Map(); cards.forEach(c => { const k = fn(c); if (k == null) return; if (!m.has(k)) m.set(k, []); m.get(k).push(c); }); return order.filter(k => m.has(k)).map(k => row(lab[k] || String(k), got(m.get(k)), m.get(k).length)).join(""); };
+  const grpData = (fn, lab, order) => { const m = new Map(); cards.forEach(c => { const k = fn(c); if (k == null) return; if (!m.has(k)) m.set(k, []); m.get(k).push(c); }); return order.filter(k => m.has(k)).map(k => ({ n: lab[k] || String(k), a: got(m.get(k)), b: m.get(k).length })); };
+  const grpBy = (fn, lab, order) => grpData(fn, lab, order).map(r => row(r.n, r.a, r.b)).join("");
   const hc = (title, a, b, note) => '<div class="hc"><small>' + title + '</small><div class="big">' + pct(a, b) + '%</div><div class="sub">' + a + " / " + b + (note ? " · " + note : "") + "</div>" + meter(a, b) + "</div>";
   const ms = []; Object.keys(MIS).forEach(k => MIS[k].forEach(x => ms.push({ k, x, s: mst(k, x) })));
   const md = ms.filter(o => o.s.done).length;
   let sp = 0, spT = 0; dex.forEach(d => { const p = prog(d); if (p.t) { spT++; if (p.h) sp++; } });
+  const todo = ms.filter(o => !o.s.done && o.s.t > 0).map(o => ({ o, left: o.s.t - o.s.h })).sort((a, b) => a.left - b.left || (b.o.s.h / b.o.s.t) - (a.o.s.h / a.o.s.t));
+  const nextM = todo[0];
   let adv = [], best = null; try { adv = packAdvice(); best = adv.find(a => a.e > 0); } catch (e) { adv = []; }
-  let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length, "копий: " + cards.reduce((a, c) => a + qty(cid(c)), 0)) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + (best ? '<div class="hc"><small>Лучший пак сейчас</small><div class="big">≈' + best.e.toFixed(1) + '</div><div class="sub">' + esc(setName(best.set) + " · " + best.pack) + " · новых карт</div></div>" : "") + "</div>";
+  let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length, "копий: " + cards.reduce((a, c) => a + qty(cid(c)), 0)) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + (nextM ? '<div class="hc"><small>Ближайшая миссия</small><div class="big">ещё ' + nextM.left + '</div><div class="sub">' + esc(nextM.o.x.title + " · " + ((sets.find(z => z.code.toLowerCase() === nextM.o.k) || { code: nextM.o.k }).code)) + "</div></div>" : "") + (best ? '<div class="hc"><small>Лучший пак сейчас</small><div class="big">≈' + best.e.toFixed(1) + '</div><div class="sub">' + esc(setName(best.set) + " · " + best.pack) + " · новых карт</div></div>" : "") + "</div>";
   if (adv.length) out += acc("🎯", "Какой пак открывать", "ожидаемое число новых карт", adviceHtml(adv));
+  if (todo.length) {
+    const by = {}; todo.forEach(t => { (by[t.o.k] = by[t.o.k] || []).push(t); });
+    out += acc("🧭", "Какие миссии лучше закрывать", "ближайшие к выполнению по сетам", '<p class="prog">Сначала те миссии, где осталось меньше всего карточек или копий. Показаны три ближайшие в каждом сете, сеты идут от самого близкого к выполнению.</p>' +
+      Object.keys(by).sort((a, b) => by[a][0].left - by[b][0].left).map(k => { const z = sets.find(q => q.code.toLowerCase() === k); return '<div class="gt">' + esc(z ? setName(z) : k) + "</div>" + by[k].slice(0, 3).map(t => '<div class="irow"><span>' + (isSec(k, t.o.x) ? "🔒 " : "") + esc(t.o.x.title) + "</span><b>" + t.o.s.h + " / " + t.o.s.t + " · ещё " + t.left + "</b></div>").join(""); }).join(""));
+  }
   const sw = sets.filter(x => cards.some(c => c.set === x.code));
-  out += acc("🗂️", "Карточки по сетам", sw.length + " сетов", sw.map(x => { const l = cards.filter(c => c.set === x.code); return row(setName(x) + " (" + x.code + ")", got(l), l.length); }).join(""));
+  out += acc("🗂️", "Карточки по сетам", sw.length + " сетов", sortable("sets", sw.map(x => { const l = cards.filter(c => c.set === x.code); return { n: setName(x) + " (" + x.code + ")", a: got(l), b: l.length }; })));
   const prow = [];
   sets.forEach(x => {
-    if (/promo/i.test(x.code + " " + setName(x))) { const l = cards.filter(c => c.set === x.code); if (l.length) prow.push(row(setName(x), got(l), l.length, true)); return; }
-    packsFor(x).forEach(pn => { const l = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn)); if (l.length) prow.push(row(setName(x) + " · " + pn, got(l), l.length, true)); });
-    const np = cards.filter(c => c.set === x.code && !(c.packs || []).length); if (np.length) prow.push(row(setName(x) + " · без пака", got(np), np.length, true));
+    if (/promo/i.test(x.code + " " + setName(x))) { const l = cards.filter(c => c.set === x.code); if (l.length) prow.push({ n: setName(x), a: got(l), b: l.length, left: true }); return; }
+    packsFor(x).forEach(pn => { const l = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn)); if (l.length) prow.push({ n: setName(x) + " · " + pn, a: got(l), b: l.length, left: true }); });
+    const np = cards.filter(c => c.set === x.code && !(c.packs || []).length); if (np.length) prow.push({ n: setName(x) + " · без пака", a: got(np), b: np.length, left: true });
   });
-  if (prow.length) out += acc("🎴", "Карточки по пакам", prow.length + " пакетов", prow.join(""));
+  if (prow.length) out += acc("🎴", "Карточки по пакам", prow.length + " пакетов", sortable("packs", prow));
   const rars = [...new Set(cards.map(c => c.rarity || "—"))].sort((a, b) => { const i = RORD.indexOf(a), j = RORD.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j) || a.localeCompare(b); });
   const REGS = ["C", "U", "R", "RR"], rl = r => cards.filter(c => (c.rarity || "—") === r), rrow = r => row(r + (RNAME[r] ? " · " + RNAME[r] : ""), got(rl(r)), rl(r).length);
   const regAll = cards.filter(c => REGS.includes(c.rarity)), spAll = cards.filter(c => !REGS.includes(c.rarity));
@@ -453,19 +479,12 @@ function drawStats(body) {
     const ex = cards.filter(c => c.poke && / ex$/i.test(c.name));
     out += acc("🧩", "Карточки по типам", "покемоны и тренеры", grpBy(c => c.type || null, TLAB, ["pokemon", "item", "supporter", "tool", "stadium"]));
     out += acc("🌱", "Покемоны по стадиям", "базовые, 1 и 2 стадия, ex", '<p class="prog">Считаются карточки покемонов, каждая версия (арт) отдельно, семейства эволюций не объединяются. Ex-карточки входят в свою стадию (базовую, 1 или 2) и ещё отдельной строкой ниже, поэтому строки в сумме больше общего числа.</p>' + grpBy(c => c.stage == null ? null : String(c.stage), SLAB, ["basic", "1", "2"]) + (ex.length ? row("Покемоны ex (входят и в стадии выше)", got(ex), ex.length) : ""));
-    out += acc("🔥", "Покемоны по стихиям", "10 стихий", grpBy(c => c.element || null, ELAB, ["grass", "fire", "water", "lightning", "psychic", "fighting", "darkness", "metal", "dragon", "colorless"]));
+    out += acc("🔥", "Покемоны по стихиям", "10 стихий", sortable("elements", grpData(c => c.element || null, ELAB, ["grass", "fire", "water", "lightning", "psychic", "fighting", "darkness", "metal", "dragon", "colorless"])));
   }
   if (ms.length) {
     const d = f => ms.filter(o => f(o) && o.s.done).length, n = f => ms.filter(f).length;
     out += acc("🎯", "Миссии", "обычные и секретные", row("Всего закрыто", md, ms.length) + row("Обычные", d(o => !isSec(o.k, o.x)), n(o => !isSec(o.k, o.x))) + row("Секретные", d(o => isSec(o.k, o.x)), n(o => isSec(o.k, o.x))));
-    out += acc("🗺️", "Миссии по сетам", Object.keys(MIS).length + " сетов", Object.keys(MIS).map(k => { const l = ms.filter(o => o.k === k), s = sets.find(z => z.code.toLowerCase() === k); return row(s ? setName(s) + " (" + s.code + ")" : k, l.filter(o => o.s.done).length, l.length); }).join(""));
-  }
-  const wl = cards.filter(c => wish.has(cid(c))), al = cards.filter(c => alt.has(cid(c)));
-  if (wl.length || al.length) out += acc("💗", "Желаемое и другой аккаунт", wl.length + " желаемых · " + al.length + " на другом аккаунте", row("Желаемое: уже собрано", got(wl), wl.length) + row("На другом аккаунте: есть и здесь", got(al), al.length));
-  if (ms.length) {
-    const rw = new Map();
-    ms.forEach(o => String(o.x.reward || "").split(",").forEach(t => { t = t.trim(); if (!t) return; const m = t.match(/^(.*?)\s*[×x]\s*(\d+)$/), nm = m ? m[1].trim() : t, n = m ? +m[2] : 1, e = rw.get(nm) || [0, 0]; e[1] += n; if (o.s.done) e[0] += n; rw.set(nm, e); }));
-    if (rw.size) out += acc("🎁", "Награды миссий", "получено за выполненные миссии", [...rw].sort((a, b) => b[1][1] - a[1][1]).map(([k, v]) => row(k, v[0], v[1])).join(""));
+    out += acc("🗺️", "Миссии по сетам", Object.keys(MIS).length + " сетов", sortable("mset", Object.keys(MIS).map(k => { const l = ms.filter(o => o.k === k), s = sets.find(z => z.code.toLowerCase() === k); return { n: s ? setName(s) + " (" + s.code + ")" : k, a: l.filter(o => o.s.done).length, b: l.length }; })));
   }
   let last = ""; try { last = localStorage.getItem("tcgp-lastbackup") || ""; } catch (e) {}
   out += acc("💾", "Копия данных", last ? "последняя копия: " + new Date(last).toLocaleDateString("ru-RU") : "копии ещё не было", '<p class="prog">Отметки, копии, желаемое и переносы миссий хранятся только в этом браузере, в репозитории их нет. Чтобы не потерять их (очистка Safari, смена устройства), время от времени сохраняй копию и убери её в «Файлы» или iCloud.</p><div class="bk"><button class="more" id="bkx">Сохранить копию</button><label class="more">Восстановить из копии<input type="file" id="bki" accept="application/json" hidden></label></div>');
@@ -520,18 +539,24 @@ function renderPk() {
   const v = $("#pv"), d = dex.find(x => x.id === st.open);
   if (!d) { v.hidden = true; return; }
   const f = fav.has(d.id), l = (spMap.get(d.id) || []).slice().sort(cmpCard);
-  v.innerHTML = '<div style="max-width:1000px;margin:0 auto"><button class="more" id="pvback" style="margin:0 0 10px">← Назад</button>' +
-    '<div class="dhead"><img src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)" alt="">' +
-    '<div style="flex:1"><div style="font-size:22px;font-weight:700">' + escG(d.name) + ' <span class="prog">#' + d.id + '</span></div><div class="prog" id="dprog"></div></div>' +
+  v.innerHTML = '<div style="max-width:1000px;margin:0 auto"><div class="pvh"><button class="more" id="pvback">← Назад</button>' +
+    '<img class="pvs" src="' + SPR[0](d.id) + '" data-d="' + d.id + '" data-t="0" onerror="sprErr(this)" alt="">' +
+    '<div class="pvt"><div class="pvn">' + escG(d.name) + ' <span class="prog">#' + d.id + '</span></div><div class="prog" id="dprog"></div></div>' +
     '<button class="heart' + (f ? " on" : "") + '" id="hrt">' + (f ? "♥" : "♡") + '</button></div><div class="grid">' + l.map(c => tile(c, { star: true })).join("") + "</div></div>";
   updatePkProg(); v.hidden = false;
 }
-function openPk(id) { st.open = id; renderPk(); lockScroll(); try { history.pushState({ v: "pk" }, ""); } catch (e) {} }
+let pkSeen = new Set();
+function openPk(id) { st.open = id; pkSeen = new Set([id]); renderPk(); lockScroll(); try { history.pushState({ v: "pk" }, ""); } catch (e) {} }
 function hidePk() {
-  const id = st.open; st.open = 0; const v = $("#pv"); if (v) v.hidden = true; lockScroll();
-  const d = dex.find(x => x.id === id), el = document.querySelector('.pk[data-d="' + id + '"]');
-  if (d && el) { if (st.favOnly && !fav.has(id)) el.remove(); else el.outerHTML = pkTile(d); }
+  const ids = [...pkSeen], last = st.open; st.open = 0; const v = $("#pv"); if (v) v.hidden = true; lockScroll();
+  ids.forEach(id => { const d = dex.find(x => x.id === id), el = document.querySelector('.pk[data-d="' + id + '"]'); if (d && el) { if (st.favOnly && !fav.has(id)) el.remove(); else el.outerHTML = pkTile(d); } });
+  if (ids.length > 1) { const el = document.querySelector('.pk[data-d="' + last + '"]'); if (el && el.scrollIntoView) el.scrollIntoView({ block: "center" }); }
+  pkSeen = new Set();
 }
+function swipePk(dir) { const ord = st.order || [], i = ord.indexOf(st.open), n = ord[i + dir]; if (i < 0 || n == null) return; st.open = n; pkSeen.add(n); renderPk(); const v = $("#pv"); if (v) v.scrollTop = 0; }
+let swX = null, swY = 0;
+document.addEventListener("touchstart", e => { const v = e.target.closest ? e.target.closest("#pv") : null; if (!v || st.cardOpen || !e.touches || e.touches.length !== 1) { swX = null; return; } swX = e.touches[0].clientX; swY = e.touches[0].clientY; }, { passive: true });
+document.addEventListener("touchend", e => { if (swX == null || !st.open || st.cardOpen) return; const t = e.changedTouches[0], dx = t.clientX - swX, dy = t.clientY - swY; swX = null; if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) swipePk(dx < 0 ? 1 : -1); }, { passive: true });
 function closePk() { if (typeof history !== "undefined" && history.state && history.state.v === "pk") history.back(); else hidePk(); }
 window.addEventListener("popstate", () => { if (st.cardOpen) hideCard(); else if (st.open) hidePk(); });
 function renderCard() {
@@ -587,8 +612,8 @@ function build() {
     m.innerHTML = '<div class="tb"><div class="bar">' + setSelect("fset", st.set, true) +
       (po.length ? '<select id="fpack"><option value="">Все паки</option>' + po.map(x => '<option value="' + esc(x[0]) + '"' + (st.pack === x[0] ? " selected" : "") + ">" + esc(x[1]) + "</option>").join("") + "</select>" : "") +
       '<input id="fq" type="search" placeholder="Поиск по имени" value="' + esc(st.q) + '">' +
-      '<div class="seg" id="fshow">' + [["all", "Все"], ["have", "Есть"], ["miss", "Нет"]].map(x => '<button data-v="' + x[0] + '"' + (st.show === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + '</div><button class="fav' + (st.wish ? " on" : "") + '" id="fwish" title="Желаемое">♥</button><button class="fav st' + (st.alt ? " on" : "") + '" id="falt" title="Есть на другом аккаунте">★</button></div></div>' +
-      '<div class="prog" id="prog"></div><div class="grid" id="body"></div>';
+      '<div class="seg" id="fshow">' + [["all", "Все"], ["have", "Есть"], ["miss", "Нет"]].map(x => '<button data-v="' + x[0] + '"' + (st.show === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + '</div><button class="fav' + (st.wish ? " on" : "") + '" id="fwish" title="Желаемое">♥</button><button class="fav st' + (st.alt ? " on" : "") + '" id="falt" title="Есть на другом аккаунте">★</button></div>' +
+      '<div class="prog" id="prog"></div></div><div class="grid" id="body"></div>';
     $("#fset").onchange = e => { st.set = e.target.value; st.pack = ""; build(); };
     if ($("#fpack")) $("#fpack").onchange = e => { st.pack = e.target.value; st.cl = 240; draw(); };
     $("#fq").oninput = e => { st.q = e.target.value; st.cl = 240; draw(); };
@@ -603,7 +628,7 @@ function build() {
       m.innerHTML = '<div class="tb"><div class="bar"><input id="fq" type="search" placeholder="Поиск по имени или номеру" value="' + esc(st.q) + '"></div>' +
         '<div class="bar"><select id="fgen">' + opt([["", "Все поколения"]].concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(g => [g, "Поколение " + g])), st.gen) + "</select>" +
         '<button class="fav' + (st.favOnly ? " on" : "") + '" id="ffav">♥ Избранные</button>' +
-        '<select id="fflt">' + opt([["all", "Все"], ["have", "Есть карты"], ["none", "Нет карт"], ["full", "Собрано"], ["tcg", "Есть в TCG Pocket"]], st.flt) + "</select>" +
+        '<select id="fflt">' + opt([["all", "Все"], ["have", "Есть карты"], ["none", "Нет карт"], ["miss", "Не хватает (есть в TCG, у меня нет)"], ["full", "Собрано"], ["tcg", "Есть в TCG Pocket"]], st.flt) + "</select>" +
         '<select id="fsort">' + opt([["num", "По номеру"], ["name", "По имени"], ["prog", "По прогрессу"]], st.sort) + '</select></div></div><div id="body"></div>';
       $("#fq").oninput = e => { st.q = e.target.value; draw(); };
       $("#fgen").onchange = e => { st.gen = e.target.value; draw(); };
@@ -616,9 +641,8 @@ function build() {
   } else {
     if (!st.mset && sets.length) st.mset = (sets.find(x => MIS[x.code.toLowerCase()]) || sets[0]).code;
     m.innerHTML = '<div class="tb"><div class="bar">' + setSelect("fset", st.mset, false) +
-      '<div class="seg" id="fsec"><button data-v="0"' + (!st.secret ? ' class="on"' : '') + '>Обычные</button><button data-v="1"' + (st.secret ? ' class="on"' : '') + '>Секретные</button></div></div></div><div id="body"></div>';
+      '</div></div><div id="body"></div>';
     $("#fset").onchange = e => { st.mset = e.target.value; draw(); };
-    $("#fsec").onclick = e => { const v = e.target.dataset.v; if (v) { st.secret = v === "1"; build(); } };
   }
   draw();
   setHH();
@@ -635,7 +659,7 @@ function draw() {
     $("#prog").innerHTML = "Собрано " + have + " из " + list.length + meter(have, list.length);
     if (st.show === "have") list = list.filter(c => owned.has(cid(c)));
     if (st.show === "miss") list = list.filter(c => !owned.has(cid(c)));
-    body.innerHTML = list.length ? list.slice(0, st.cl).map(tile).join("") + (list.length > st.cl ? '<button class="more" id="moreCards" style="grid-column:1/-1">Показать ещё (' + (list.length - st.cl) + ")</button>" : "") : '<p class="empty">Ничего не найдено</p>';
+    body.innerHTML = list.length ? list.slice(0, st.cl).map(c => tile(c, { star: true })).join("") + (list.length > st.cl ? '<button class="more" id="moreCards" style="grid-column:1/-1">Показать ещё (' + (list.length - st.cl) + ")</button>" : "") : '<p class="empty">Ничего не найдено</p>';
     body.className = "grid";
     const mb = $("#moreCards"); if (mb && typeof IntersectionObserver !== "undefined") { if (window.__io) window.__io.disconnect(); window.__io = new IntersectionObserver(en => { if (en[0].isIntersecting) { st.cl += 240; draw(); } }); window.__io.observe(mb); }
   } else if (tab === "species") {
@@ -646,10 +670,11 @@ function draw() {
         if (q && !d.name.toLowerCase().includes(q) && String(d.id) !== q) return false;
         if (st.flt === "all") return true;
         const p = prog(d);
-        return (st.flt === "have" && p.h > 0) || (st.flt === "none" && p.h === 0) || (st.flt === "full" && p.t > 0 && p.h === p.t) || (st.flt === "tcg" && p.t > 0);
+        return (st.flt === "have" && p.h > 0) || (st.flt === "none" && p.h === 0) || (st.flt === "miss" && p.t > 0 && p.h === 0) || (st.flt === "full" && p.t > 0 && p.h === p.t) || (st.flt === "tcg" && p.t > 0);
       });
       if (st.sort === "name") list.sort((a, b) => a.name.localeCompare(b.name));
       if (st.sort === "prog") { const r = d => { const p = prog(d); return p.t ? p.h / p.t : -1; }; list.sort((a, b) => r(b) - r(a) || a.id - b.id); }
+      st.order = list.map(d => d.id);
       if (!list.length) { body.innerHTML = '<p class="empty">Ничего не найдено</p>'; return; }
       if (st.sort === "num" && !st.gen) {
         let out = "";
@@ -662,8 +687,7 @@ function draw() {
   } else {
     if (!Object.keys(MIS).length) { body.innerHTML = '<p class="empty">Миссии не загружены. Проверь, что файл missions.js лежит в репозитории рядом с index.html.</p>'; return; }
     const k = (st.mset || "").toLowerCase(), all = MIS[k] || [];
-    const items = all.map((x, i) => ({ x, i, s: mst(k, x) })).filter(o => isSec(k, o.x) === st.secret);
-    const active = items.filter(o => !o.s.done), fin = items.filter(o => o.s.done);
+    const items = all.map((x, i) => ({ x, i, s: mst(k, x) }));
     const byId = new Map(cards.map(c => [cid(c), c]));
     const one = o => {
       const x = o.x, s = o.s, at = ' data-mk="' + k + '" data-mi="' + o.i + '"';
@@ -681,19 +705,23 @@ function draw() {
       else if (x.filter) inner = '<p class="prog" style="margin:0">Считается автоматически по твоей коллекции. Подходящих карточек: ' + s.n + "</p>";
       else inner = '<div class="grid">' + x.cards.map(i => byId.get(i)).filter(Boolean).map(tile).join("") + "</div>";
       const col = foldOv[mid(k, x)] !== undefined ? foldOv[mid(k, x)] : true;
-      return '<section class="grp' + (s.done ? " done" : "") + '"><h3 class="mh" data-fold="' + k + "|" + o.i + '"><span class="chev">' + (col ? "▸" : "▾") + '</span><span class="mt">' + (s.done ? "✓ " : "") + esc(x.title) + "</span><span>" + s.h + " / " + s.t + '</span><button class="mv" data-mv="' + k + "|" + o.i + '">' + (isSec(k, x) ? "←" : "→") + "</button></h3>" +
+      return '<section class="grp' + (s.done ? " done" : "") + '"><h3 class="mh" data-fold="' + k + "|" + o.i + '"><span class="chev">' + (col ? "▸" : "▾") + '</span><span class="mt">' + (s.done ? "✓ " : "") + esc(x.title) + "</span><span>" + s.h + " / " + s.t + '</span></h3>' +
         (s.t > 1 ? meter(s.h, s.t) : "") +
         (col ? "" : (x.reward ? '<p class="prog" style="margin:6px 0 0">Награда: ' + esc(x.reward) + "</p>" : "") + (x.note ? '<p class="prog" style="margin:6px 0 0">' + esc(x.note) + "</p>" : "") + (x.guess ? '<p class="prog" style="margin:6px 0 0">⚠ Состав восстановлен по неполному тексту источника, сверь с игрой.</p>' : "") + '<div style="margin-top:10px">' + inner + "</div>") + "</section>";
     };
-    body.innerHTML = items.length ? '<div class="prog">Выполнено миссий: ' + fin.length + " из " + items.length + " (" + pct(fin.length, items.length) + "%)" + meter(fin.length, items.length) + "</div>" +
-      active.map(one).join("") + (fin.length ? '<div class="gh" style="font-size:17px">Выполнено <span>' + fin.length + "</span></div>" + fin.map(one).join("") : "") +
+    const doneN = items.filter(o => o.s.done).length;
+    const sect = (title, list) => { if (!list.length) return ""; const a = list.filter(o => !o.s.done), f = list.filter(o => o.s.done); return '<div class="gh">' + title + "<span>" + f.length + " / " + list.length + "</span></div>" + a.map(one).join("") + (f.length ? '<div class="gh" style="font-size:15px">Выполнено <span>' + f.length + "</span></div>" + f.map(one).join("") : ""); };
+    body.innerHTML = items.length ? '<div class="prog">Выполнено миссий: ' + doneN + " из " + items.length + " (" + pct(doneN, items.length) + "%)" + meter(doneN, items.length) + "</div>" +
+      sect("Обычные", items.filter(o => !isSec(k, o.x))) + sect("Секретные", items.filter(o => isSec(k, o.x))) +
       '<p class="prog">В игре некоторые миссии засчитывают любую версию карты, поэтому сверяйся с самой миссией.</p>' :
-      '<p class="empty">Для этого сета пока нет ' + (st.secret ? "секретных" : "обычных") + " миссий. Они хранятся в файле missions.js.</p>";
+      '<p class="empty">Для этого сета пока нет миссий. Они хранятся в файле missions.js.</p>';
   }
 }
 
 document.addEventListener("keydown", e => { if (e.key === "Escape") { if (st.cardOpen) closeCard(); else if (st.open) closePk(); } });
 document.addEventListener("click", e => {
+  const ss = e.target.closest ? e.target.closest(".ssort button") : null;
+  if (ss) { const bar = ss.parentElement, key = bar.dataset.sk; accSort[key] = ss.dataset.m; try { localStorage.setItem(ASKEY, JSON.stringify(accSort)); } catch (er) {} bar.querySelectorAll("button").forEach(b => b.classList.toggle("on", b === ss)); if (bar.nextElementSibling) bar.nextElementSibling.innerHTML = rowsOf(key); return; }
   const mv = e.target.closest("[data-mv]");
   const fd = !mv && e.target.closest("[data-fold]");
   if (fd) { const p = fd.dataset.fold.split("|"), x = MIS[p[0]][+p[1]], id = mid(p[0], x), cur = foldOv[id] !== undefined ? foldOv[id] : true; foldOv[id] = !cur; saveFold(); draw(); return; }
@@ -723,6 +751,7 @@ $("#nav").onclick = e => {
   tab = t; st.limit = 30;
   document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x.dataset.t === t));
   build();
+  window.scrollTo(0, 0);
 };
 
 (async () => {
