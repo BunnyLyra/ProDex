@@ -124,6 +124,16 @@ input{flex:1;min-width:140px}
 .pvh{position:sticky;top:0;z-index:3;background:var(--bg);margin:0 -14px 10px;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 8px;border-bottom:1px solid var(--ln)}
 .pvh .more{margin:0}
 .ssort{margin:10px 0 2px}.ssort button{flex:1;font-size:13px;padding:8px 6px}
+.srow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:12px;margin-bottom:10px;color:inherit;font:inherit;cursor:pointer}
+.slogo{flex:none;width:112px;height:56px;display:flex;align-items:center;justify-content:center}.slogo img{max-width:100%;max-height:100%;object-fit:contain}
+.slogo .lgt{display:none;font-size:13px;text-align:center;line-height:1.2}.slogo.nologo .lgt{display:block}.slogo.sm{width:72px;height:36px}
+.sbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}.stt{font-size:17px;font-weight:600}
+.srow .meter{display:block;height:6px;border-radius:3px;background:var(--ln);overflow:hidden;margin:0}.srow .meter i{display:block;height:100%;background:var(--ac)}
+.sft{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.cd{font-size:12px;border:1px solid var(--mt);border-radius:5px;padding:1px 6px;color:var(--mt);font-weight:600}
+.scnt{margin-left:auto;color:var(--mt);font-size:14px;white-space:nowrap}.rch{display:flex;gap:6px;flex-wrap:wrap}
+.rc{font-style:normal;font-size:12px;background:var(--bg);border:1px solid var(--ln);border-radius:999px;padding:2px 8px;color:var(--mt)}
+.rc.d{color:#8fb3d9}.rc.s{color:#e8a900}.rc.c{color:#d9a200}.rc.h{color:#b57bff}
+.prow{margin-left:14px;width:calc(100% - 14px)}.sgh{display:flex;align-items:center;gap:10px;margin:16px 2px 8px;flex-wrap:wrap}.sgh b{font-size:18px}
 </style>
 </head>
 <body>
@@ -137,7 +147,7 @@ input{flex:1;min-width:140px}
   </nav>
 </header>
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
-<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v35</footer>
+<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v36</footer>
 
 <div id="pv" hidden></div>
 <div id="cv" hidden></div>
@@ -212,8 +222,8 @@ try { owned = new Set(JSON.parse(localStorage.getItem(KEY) || "[]").map(x => Str
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...owned])); } catch (e) {} };
 
 let cards = [], sets = [], tab = "cards", dex = [], spMap = new Map(), keyMap = new Map();
-const st = { set: "", q: "", show: "all", mset: "", secret: false, limit: 30, cl: 240, cardOpen: "", wish: false, alt: false, pack: "", gen: "", favOnly: false, flt: "all", sort: "num", open: 0, scroll: 0 };
-const UIKEY = "tcgp-ui-v1", UI_FIELDS = ["set", "pack", "q", "show", "wish", "alt", "gen", "favOnly", "flt", "sort", "mset", "secret"];
+const st = { set: "", q: "", show: "all", mset: "", secret: false, limit: 30, grid: false, cv: "sets", sq: "", sscroll: 0, cl: 240, cardOpen: "", wish: false, alt: false, pack: "", gen: "", favOnly: false, flt: "all", sort: "num", open: 0, scroll: 0 };
+const UIKEY = "tcgp-ui-v1", UI_FIELDS = ["grid", "cv", "sq", "set", "pack", "q", "show", "wish", "alt", "gen", "favOnly", "flt", "sort", "mset", "secret"];
 try { const u = JSON.parse(localStorage.getItem(UIKEY) || "null"); if (u) { UI_FIELDS.forEach(k => { if (u[k] !== undefined) st[k] = u[k]; }); if (["cards", "species", "missions", "stats"].includes(u.tab)) tab = u.tab; } } catch (e) {}
 function saveUI() { try { const o = { tab }; UI_FIELDS.forEach(k => { o[k] = st[k]; }); localStorage.setItem(UIKEY, JSON.stringify(o)); } catch (e) {} }
 const cid = c => (c.set + "-" + c.number).toLowerCase();
@@ -274,7 +284,7 @@ function speciesOf(name) {
 function indexSpecies() {
   keyMap = new Map(dex.map(d => [d.key, d.id])); spMap = new Map();
   const TW = /\b(bag|ball|cape|potion|helmet|scarf|band|charm|stone|fossil|orders?|research|machine|berry|gear|slab|flute|cloak|bell|shell|vest|glasses|ticket|incense|feather|cart|stadium|energy)\b/i;
-  cards.forEach(c => { if (!c.type) c.poke = speciesOf(c.name) > 0 && !TW.test(c.name); if (!c.poke) return; const id = speciesOf(c.name); if (id) { if (!spMap.has(id)) spMap.set(id, []); spMap.get(id).push(c); } });
+  cards.forEach(c => { if (!c.type) c.poke = speciesOf(c.name) > 0 && !TW.test(c.name); if (!c.poke) return; const id = speciesOf(c.name); if (id) { c.sp = id; if (!spMap.has(id)) spMap.set(id, []); spMap.get(id).push(c); } });
 }
 const prog = d => { const l = spMap.get(d.id) || []; return { h: l.filter(c => owned.has(cid(c))).length, t: l.length }; };
 const GSVG = { "♀": '<svg class="gs" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M12 14v8M8.5 18h7"/></svg>', "♂": '<svg class="gs" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="14" r="5"/><path d="M13.5 10.5L20 4M14.5 4H20v5.5"/></svg>' };
@@ -391,14 +401,15 @@ function prRates(code) {
   const base = sets.find(x => PR[x.code] && /^[A-Z]\d$/.test(x.code));   /* для сета без таблицы берём шансы новейшего большого сета (sets идут от новых к старым) */
   return base ? { r: PR[base.code], est: true, from: base.code } : null;
 }
-function packAdvice() {
+function packAdvice(pred) {
+  pred = pred || (c => !owned.has(cid(c)));
   const out = [];
   sets.forEach(x => {
     const pr = prRates(x.code); if (!pr) return;
     packsFor(x).forEach(pn => {
       const pool = cards.filter(c => c.set === x.code && (c.packs || []).includes(pn));
       if (!pool.length) return;
-      const memo = {}, stat = code => memo[code] || (memo[code] = (() => { const ok = PR_MAP[code] || [code], l = pool.filter(c => ok.includes(c.rarity)); return { t: l.length, m: l.filter(c => !owned.has(cid(c))).length }; })());
+      const memo = {}, stat = code => memo[code] || (memo[code] = (() => { const ok = PR_MAP[code] || [code], l = pool.filter(c => ok.includes(c.rarity)); return { t: l.length, m: l.filter(pred).length }; })());
       const types = Object.values(pr.r), tot = types.reduce((a, t) => a + (+t.appearance_rate || 0), 0) || 1;
       let e = 0, er = 0, n = 0;
       types.forEach(t => {
@@ -406,13 +417,14 @@ function packAdvice() {
         Object.values(t.slots || {}).forEach(sl => Object.keys(sl).forEach(code => { const st1 = stat(code); if (!st1.t) return; const v = sl[code] / 100 * st1.m / st1.t; ee += v; if (!PR_DIA.includes(code)) rr += v; }));
         e += w * ee; er += w * rr; n += w * (+t.cards || 0);
       });
-      out.push({ set: x, pack: pn, e, er, n, miss: pool.filter(c => !owned.has(cid(c))).length, total: pool.length, est: pr.est, from: pr.from });
+      out.push({ set: x, pack: pn, e, er, n, miss: pool.filter(pred).length, total: pool.length, est: pr.est, from: pr.from });
     });
   });
   return out.sort((a, b) => b.e - a.e || b.miss - a.miss);
 }
-function adviceHtml(adv) {
-  const rows = adv.map((a, i) => '<div style="margin:12px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + (a.e > 0 ? (i + 1) + ". " : "") + esc(setName(a.set) + " · " + a.pack) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + (a.miss ? "≈ " + a.e.toFixed(2) + " нов." : "собрано") + "</span></div>" + meter(a.e, a.n || 1) +
+const isDlx = a => /deluxe/i.test(a.set.code + " " + setName(a.set));
+function adviceHtml(adv, unit) {
+  const rows = adv.map((a, i) => '<div style="margin:12px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + (a.e > 0 ? (i + 1) + ". " : "") + esc(setName(a.set) + " · " + a.pack) + (isDlx(a) ? " · временный" : "") + '</span><span class="prog" style="margin:0;white-space:nowrap">' + (a.miss ? "≈ " + a.e.toFixed(2) + " " + (unit || "нов.") : "собрано") + "</span></div>" + meter(a.e, a.n || 1) +
     '<div class="prog" style="margin:4px 0 0;font-size:12px">' + (a.miss ? "из " + a.n.toFixed(1) + " карт в паке · редких ≈ " + a.er.toFixed(2) + " · не хватает " + a.miss + " из " + a.total : "в этом паке есть все карточки") + (a.est ? " · шансы сета " + a.from + " (для этого сета таблицы нет)" : "") + "</div></div>").join("");
   return rows + '<p class="prog" style="font-size:12px">Приблизительный расчёт: внутри одной редкости карточки пака считаются равновероятными, повторы в одном паке не учитываются. «Редкие» это всё, кроме ромбов (C, U, R, RR). Шансы взяты из pullRates.json.</p>';
 }
@@ -429,6 +441,17 @@ document.addEventListener("click", e => {
   const top = sm.getBoundingClientRect().top;
   requestAnimationFrame(() => requestAnimationFrame(() => { const d = sm.getBoundingClientRect().top - top; if (Math.abs(d) > 1) window.scrollBy(0, d); }));
 }, true);
+function favMissing() {
+  return [...fav].map(id => dex.find(x => x.id === id)).filter(Boolean).map(d => { const l = spMap.get(d.id) || []; return { d, miss: l.filter(c => !owned.has(cid(c))), total: l.length }; }).sort((a, b) => b.miss.length - a.miss.length);
+}
+function neededIds() {   /* недостающие карточки из невыполненных условий миссий (широкие условия вроде «любые 100 ex» не считаем) */
+  const ids = new Set();
+  Object.keys(MIS).forEach(k => MIS[k].forEach(x => {
+    if (x.manual || x.filter || mst(k, x).done) return;
+    (x.groups || []).forEach(g => { const r = reqOf(g); if (r.dx) return; const p = rprog(r); if (p.h >= p.t || p.cs.length > 60) return; p.cs.forEach(c => { if (!owned.has(cid(c))) ids.add(cid(c)); }); });
+  }));
+  return ids;
+}
 const statRow = (name, a, b, left) => '<div style="margin:10px 0"><div style="display:flex;justify-content:space-between;gap:8px"><span>' + esc(name) + '</span><span class="prog" style="margin:0;white-space:nowrap">' + a + " / " + b + " · " + pct(a, b) + "%" + (left ? " · ещё " + (b - a) : "") + "</span></div>" + meter(a, b) + "</div>";
 const ASKEY = "tcgp-accsort-v1";
 let accSort = {}, SORTD = {};
@@ -442,6 +465,7 @@ const sortBar = key => '<div class="seg ssort" data-sk="' + key + '">' + [["", "
 const sortable = (key, data) => { SORTD[key] = data; return sortBar(key) + '<div class="srows">' + rowsOf(key) + "</div>"; };
 function drawStats(body) {
   const row = statRow;
+  const safe = (title, fn) => { try { return fn() || ""; } catch (e) { return acc("⚠️", title, "не удалось построить", '<p class="prog">' + esc(String(e && e.message || e)) + "</p>"); } };
   const got = l => l.filter(c => owned.has(cid(c))).length;
   const acc = (icon, title, sub, inner) => '<details class="acc" data-k="' + esc(title) + '"' + (accOpen[title] ? " open" : "") + '><summary><span class="ai">' + icon + '</span><span class="at"><b>' + title + "</b><small>" + sub + '</small></span><span class="chv">›</span></summary><div class="accb">' + inner + "</div></details>";
   const grpData = (fn, lab, order) => { const m = new Map(); cards.forEach(c => { const k = fn(c); if (k == null) return; if (!m.has(k)) m.set(k, []); m.get(k).push(c); }); return order.filter(k => m.has(k)).map(k => ({ n: lab[k] || String(k), a: got(m.get(k)), b: m.get(k).length })); };
@@ -452,9 +476,32 @@ function drawStats(body) {
   let sp = 0, spT = 0; dex.forEach(d => { const p = prog(d); if (p.t) { spT++; if (p.h) sp++; } });
   const todo = ms.filter(o => !o.s.done && o.s.t > 0).map(o => ({ o, left: o.s.t - o.s.h })).sort((a, b) => a.left - b.left || (b.o.s.h / b.o.s.t) - (a.o.s.h / a.o.s.t));
   const nextM = todo[0];
-  let adv = [], best = null; try { adv = packAdvice(); best = adv.find(a => a.e > 0); } catch (e) { adv = []; }
-  let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length, "копий: " + cards.reduce((a, c) => a + qty(cid(c)), 0)) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + (nextM ? '<div class="hc"><small>Ближайшая миссия</small><div class="big">ещё ' + nextM.left + '</div><div class="sub">' + esc(nextM.o.x.title + " · " + ((sets.find(z => z.code.toLowerCase() === nextM.o.k) || { code: nextM.o.k }).code)) + "</div></div>" : "") + (best ? '<div class="hc"><small>Лучший пак сейчас</small><div class="big">≈' + best.e.toFixed(1) + '</div><div class="sub">' + esc(setName(best.set) + " · " + best.pack) + " · новых карт</div></div>" : "") + "</div>";
-  if (adv.length) out += acc("🎯", "Какой пак открывать", "ожидаемое число новых карт", adviceHtml(adv));
+  const favPred = c => c.sp && fav.has(c.sp) && !owned.has(cid(c));
+  let nid = null; const misPred = c => { if (!nid) nid = neededIds(); return nid.has(cid(c)); };
+  let adv = [], advF = [], advM = [];
+  try { adv = packAdvice(); } catch (e) { adv = []; }
+  try { if (fav.size) advF = packAdvice(favPred); } catch (e) { advF = []; }
+  try { advM = packAdvice(misPred); } catch (e) { advM = []; }
+  const heroBest = (list, title, unit) => {   /* Deluxe-паки временные: в плитке берём лучший из обычных паков */
+    const b = list.find(a => !isDlx(a) && a.e > 0), top = list.find(a => a.e > 0); if (!b) return "";
+    return '<div class="hc"><small>' + title + '</small><div class="big">≈' + b.e.toFixed(1) + '</div><div class="sub">' + esc(setName(b.set) + " · " + b.pack) + " · " + unit + (top && isDlx(top) ? " · Deluxe временный, показан следующий за ним" : "") + "</div></div>";
+  };
+  let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length, "копий: " + cards.reduce((a, c) => a + qty(cid(c)), 0)) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + (nextM ? '<div class="hc"><small>Ближайшая миссия</small><div class="big">ещё ' + nextM.left + '</div><div class="sub">' + esc(nextM.o.x.title + " · " + ((sets.find(z => z.code.toLowerCase() === nextM.o.k) || { code: nextM.o.k }).code)) + "</div></div>" : "") +
+    heroBest(adv, "Лучший пак сейчас", "новых карт") + heroBest(advF, "Лучший пак для избранных", "нужных карт") + heroBest(advM, "Лучший пак для миссий", "нужных карт") + "</div>";
+  out += safe("Какой пак открывать", () => adv.length ? acc("🎯", "Какой пак открывать", "ожидаемое число новых карт, Deluxe временные", adviceHtml(adv)) : "");
+  out += safe("Избранные покемоны", () => {
+    const fl = favMissing();
+    if (!fl.length) return acc("💗", "Избранные покемоны: чего не хватает", "нет избранных", '<p class="prog">Отметь покемона сердечком на его странице, и здесь появится, каких карточек ему не хватает и в каких паках они лежат.</p>');
+    const packCount = {}, rows = fl.map(f => {
+      const pc = {}; f.miss.forEach(c => { const z = sets.find(q => q.code === c.set); (c.packs && c.packs.length ? c.packs : ["без пака"]).forEach(pn => { const lab = (z ? setName(z) : c.set) + " · " + pn; pc[lab] = (pc[lab] || 0) + 1; packCount[lab] = (packCount[lab] || 0) + 1; }); });
+      const where = Object.keys(pc).sort((a, b) => pc[b] - pc[a]).slice(0, 8).map(k => k + " ×" + pc[k]).join("; ");
+      return '<div class="gt">' + escG(f.d.name) + ' <span class="prog">#' + f.d.id + "</span> · " + (f.miss.length ? "не хватает " + f.miss.length + " из " + f.total : "собраны все " + f.total) + "</div>" + (f.miss.length ? '<div class="prog ind">Где искать: ' + esc(where) + "</div>" : "");
+    }).join("");
+    const top = Object.keys(packCount).sort((a, b) => packCount[b] - packCount[a]).slice(0, 8).map(k => '<div class="irow"><span>' + esc(k) + "</span><b>" + packCount[k] + " карт</b></div>").join("");
+    return acc("💗", "Избранные покемоны: чего не хватает", fl.length + " избранных, не хватает " + fl.reduce((a, f) => a + f.miss.length, 0) + " карт", (top ? '<div class="gt">Паки с наибольшим числом нужных карточек</div>' + top : "") + rows);
+  });
+  out += safe("Пак для избранных", () => advF.some(a => a.miss) ? acc("💗", "Какой пак открывать для избранных", "ожидаемо нужных карт", adviceHtml(advF.filter(a => a.miss > 0), "нужных")) : "");
+  out += safe("Пак для миссий", () => advM.some(a => a.miss) ? acc("🧩", "Какой пак открывать для миссий", "ожидаемо нужных для миссий карт", '<p class="prog" style="font-size:12px">Учитываются недостающие карточки из невыполненных миссий (широкие условия вроде «любые 100 ex» не считаются).</p>' + adviceHtml(advM.filter(a => a.miss > 0), "нужных")) : "");
   if (todo.length) {
     const by = {}; todo.forEach(t => { (by[t.o.k] = by[t.o.k] || []).push(t); });
     out += acc("🧭", "Какие миссии лучше закрывать", "ближайшие к выполнению по сетам", '<p class="prog">Сначала те миссии, где осталось меньше всего карточек или копий. Показаны три ближайшие в каждом сете, сеты идут от самого близкого к выполнению.</p>' +
@@ -482,7 +529,9 @@ function drawStats(body) {
   if (ms.length) {
     const d = f => ms.filter(o => f(o) && o.s.done).length, n = f => ms.filter(f).length;
     out += acc("🎯", "Миссии", "обычные и секретные", row("Всего закрыто", md, ms.length) + row("Обычные", d(o => !isSec(o.k, o.x)), n(o => !isSec(o.k, o.x))) + row("Секретные", d(o => isSec(o.k, o.x)), n(o => isSec(o.k, o.x))));
-    out += acc("🗺️", "Миссии по сетам", Object.keys(MIS).length + " сетов", sortable("mset", Object.keys(MIS).map(k => { const l = ms.filter(o => o.k === k), s = sets.find(z => z.code.toLowerCase() === k); return { n: s ? setName(s) + " (" + s.code + ")" : k, a: l.filter(o => o.s.done).length, b: l.length }; })));
+    const msetRows = sec => Object.keys(MIS).map(k => { const l = ms.filter(o => o.k === k && isSec(o.k, o.x) === sec), z = sets.find(q => q.code.toLowerCase() === k); return { n: z ? setName(z) + " (" + z.code + ")" : k, a: l.filter(o => o.s.done).length, b: l.length }; }).filter(r => r.b > 0);
+    out += acc("🗺️", "Миссии по сетам: обычные", "прогресс по каждому сету", sortable("msetR", msetRows(false)));
+    out += acc("🔒", "Миссии по сетам: секретные", "прогресс по каждому сету", sortable("msetS", msetRows(true)));
   }
   let last = ""; try { last = localStorage.getItem("tcgp-lastbackup") || ""; } catch (e) {}
   out += acc("💾", "Копия данных", last ? "последняя копия: " + new Date(last).toLocaleDateString("ru-RU") : "копии ещё не было", '<p class="prog">Отметки, копии, желаемое и переносы миссий хранятся только в этом браузере, в репозитории их нет. Чтобы не потерять их (очистка Safari, смена устройства), время от времени сохраняй копию и убери её в «Файлы» или iCloud.</p><div class="bk"><button class="more" id="bkx">Сохранить копию</button><label class="more">Восстановить из копии<input type="file" id="bki" accept="application/json" hidden></label></div>');
@@ -556,7 +605,7 @@ let swX = null, swY = 0;
 document.addEventListener("touchstart", e => { const v = e.target.closest ? e.target.closest("#pv") : null; if (!v || st.cardOpen || !e.touches || e.touches.length !== 1) { swX = null; return; } swX = e.touches[0].clientX; swY = e.touches[0].clientY; }, { passive: true });
 document.addEventListener("touchend", e => { if (swX == null || !st.open || st.cardOpen) return; const t = e.changedTouches[0], dx = t.clientX - swX, dy = t.clientY - swY; swX = null; if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) swipePk(dx < 0 ? 1 : -1); }, { passive: true });
 function closePk() { if (typeof history !== "undefined" && history.state && history.state.v === "pk") history.back(); else hidePk(); }
-window.addEventListener("popstate", () => { if (st.cardOpen) hideCard(); else if (st.open) hidePk(); });
+window.addEventListener("popstate", () => { if (st.cardOpen) hideCard(); else if (st.open) hidePk(); else if (tab === "cards" && st.grid) leaveGrid(); });
 function renderCard() {
   const id = st.cardOpen, v = $("#cv"), c = cards.find(x => cid(x) === id);
   if (!c) { v.hidden = true; return; }
@@ -584,6 +633,39 @@ function packOpts() {
   (st.set ? sets.filter(x => x.code === st.set) : sets).forEach(x => { if (/promo/i.test(x.code + " " + setName(x))) return; const ps = packsFor(x); if (ps.length) ps.forEach(pn => out.push([x.code + "|" + pn, st.set ? pn : pn + " · " + x.code])); });
   return out;
 }
+let bySetMap = null;
+const setCards = code => { if (!bySetMap || bySetMap.n !== cards.length) { bySetMap = new Map(); cards.forEach(c => { if (!bySetMap.has(c.set)) bySetMap.set(c.set, []); bySetMap.get(c.set).push(c); }); bySetMap.n = cards.length; } return bySetMap.get(code) || []; };
+const RCAT = { d: ["C", "U", "R", "RR"], s: ["AR", "SR", "SAR", "IM"], c: ["UR"], h: ["S", "SSR"] }, RICON = { d: "◆", s: "★", c: "♛", h: "✦" };
+const gotN = l => l.filter(c => owned.has(cid(c))).length;
+const chipsHtml = list => '<span class="rch">' + Object.keys(RCAT).map(k => { const l = list.filter(c => RCAT[k].includes(c.rarity)); return l.length ? '<i class="rc ' + k + '">' + RICON[k] + " " + gotN(l) + "/" + l.length + "</i>" : ""; }).join("") + "</span>";
+let logoPref = 0;
+const slug = (t, d) => String(t).toLowerCase().replace(/[^a-z0-9]+/g, d).replace(new RegExp("^" + d + "|" + d + "$", "g"), "");
+const LOGO = [x => x.code + ".webp", x => x.code + ".png", x => x.code.toLowerCase() + ".webp", x => x.code.toLowerCase() + ".png", x => slug(setName(x), "-") + ".webp", x => slug(setName(x), "-") + ".png", x => slug(setName(x), "_") + ".webp", x => setName(x) + ".webp", x => x.code + ".jpg"];
+const logoSrc = (x, k) => "dist/images/sets/" + LOGO[k](x);
+window.logoErr = el => { const t = (+el.dataset.t || 0) + 1, x = sets.find(z => z.code === el.dataset.c); if (!x || t >= LOGO.length) { el.style.display = "none"; if (el.parentNode) el.parentNode.classList.add("nologo"); return; } el.dataset.t = t; const k = (logoPref + t) % LOGO.length; el.dataset.k = k; el.src = logoSrc(x, k); };
+window.logoOk = el => { logoPref = +(el.dataset.k || 0); };
+const logoHtml = (x, cls) => '<span class="slogo' + (cls ? " " + cls : "") + '"><img loading="lazy" alt="" src="' + logoSrc(x, logoPref) + '" data-c="' + esc(x.code) + '" data-k="' + logoPref + '" onerror="logoErr(this)" onload="logoOk(this)"><b class="lgt">' + esc(setName(x)) + "</b></span>";
+function setRow(x) {
+  const l = setCards(x.code), h = gotN(l);
+  return '<button class="srow" data-set="' + esc(x.code) + '">' + logoHtml(x) + '<span class="sbody"><span class="stt">' + esc(setName(x)) + '</span><span class="meter"><i style="width:' + pct(h, l.length) + '%"></i></span><span class="sft"><b class="cd">' + esc(x.code) + "</b>" + chipsHtml(l) + '<span class="scnt">' + h + " / " + l.length + "</span></span></span></button>";
+}
+function packRowHtml(x, pn, l) {
+  const h = gotN(l);
+  return '<button class="srow prow" data-set="' + esc(x.code) + '" data-pack="' + esc(pn) + '"><span class="sbody"><span class="stt">' + esc(pn) + '</span><span class="meter"><i style="width:' + pct(h, l.length) + '%"></i></span><span class="sft">' + chipsHtml(l) + '<span class="scnt">' + h + " / " + l.length + " · " + pct(h, l.length) + "%</span></span></span></button>";
+}
+function cardsListHtml() {
+  const q = st.sq.trim().toLowerCase(), have = sets.filter(x => setCards(x.code).length), hit = t => !q || String(t).toLowerCase().includes(q);
+  if (st.cv !== "packs") return have.filter(x => hit(setName(x) + " " + x.code)).map(setRow).join("");
+  return have.map(x => {
+    if (/promo/i.test(x.code + " " + setName(x))) return hit(setName(x) + " " + x.code) ? setRow(x) : "";
+    const whole = hit(setName(x) + " " + x.code), rows = packsFor(x).map(pn => ({ pn, l: setCards(x.code).filter(c => (c.packs || []).includes(pn)) })).filter(r => r.l.length && (whole || hit(r.pn)));
+    if (!rows.length) return "";
+    return '<div class="sgh">' + logoHtml(x, "sm") + "<b>" + esc(setName(x)) + '</b><span class="cd">' + esc(x.code) + "</span>" + chipsHtml(setCards(x.code)) + "</div>" + rows.map(r => packRowHtml(x, r.pn, r.l)).join("");
+  }).join("");
+}
+function openGrid(set, pack) { st.grid = true; st.set = set; st.pack = pack; st.cl = 240; st.q = ""; st.show = "all"; st.wish = false; st.alt = false; build(); window.scrollTo(0, 0); try { history.pushState({ v: "grid" }, ""); } catch (e) {} }
+function leaveGrid() { st.grid = false; build(); window.scrollTo(0, st.sscroll || 0); }
+function closeGrid() { if (typeof history !== "undefined" && history.state && history.state.v === "grid") history.back(); else leaveGrid(); }
 function cf() {
   const q = st.q.trim().toLowerCase(), pp = st.pack ? st.pack.split("|") : null;
   return cards.filter(c => (!st.set || c.set === st.set) && (!q || c.name.toLowerCase().includes(q)) && (!pp || (c.set === pp[0] && (c.packs || []).includes(pp.slice(1).join("|")))) && (!st.wish || wish.has(cid(c))) && (!st.alt || alt.has(cid(c))));
@@ -604,14 +686,20 @@ function meter(a, b) { return '<div class="meter"><i style="width:' + (b ? Math.
 function build() {
   saveUI();
   const m = $("#main");
-  if (tab === "cards") {
+  if (tab === "cards" && !st.grid) {
+    m.innerHTML = '<div class="tb"><div class="bar"><div class="seg" id="cvm"><button data-v="sets"' + (st.cv !== "packs" ? ' class="on"' : "") + '>Set</button><button data-v="packs"' + (st.cv === "packs" ? ' class="on"' : "") + '>Pack</button></div><input id="sq" type="search" placeholder="Поиск по сетам и пакам" value="' + esc(st.sq) + '"><button class="fav" id="allc">Все карточки</button></div></div><div id="body"></div>';
+    $("#cvm").onclick = e => { const v = e.target.dataset.v; if (v) { st.cv = v; build(); } };
+    $("#sq").oninput = e => { st.sq = e.target.value; draw(); };
+    $("#allc").onclick = () => { st.sscroll = window.scrollY || 0; openGrid("", ""); };
+  } else if (tab === "cards") {
     st.cl = 240;
     const po = packOpts();
-    m.innerHTML = '<div class="tb"><div class="bar">' + setSelect("fset", st.set, true) +
+    m.innerHTML = '<div class="tb"><div class="bar"><button class="fav" id="gback">← К сетам</button>' + setSelect("fset", st.set, true) +
       (po.length ? '<select id="fpack"><option value="">Все паки</option>' + po.map(x => '<option value="' + esc(x[0]) + '"' + (st.pack === x[0] ? " selected" : "") + ">" + esc(x[1]) + "</option>").join("") + "</select>" : "") +
       '<input id="fq" type="search" placeholder="Поиск по имени" value="' + esc(st.q) + '">' +
       '<div class="seg" id="fshow">' + [["all", "Все"], ["have", "Есть"], ["miss", "Нет"]].map(x => '<button data-v="' + x[0] + '"' + (st.show === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + '</div><button class="fav' + (st.wish ? " on" : "") + '" id="fwish" title="Желаемое">♥</button><button class="fav st' + (st.alt ? " on" : "") + '" id="falt" title="Есть на другом аккаунте">★</button></div>' +
       '<div class="prog" id="prog"></div></div><div class="grid" id="body"></div>';
+    $("#gback").onclick = () => closeGrid();
     $("#fset").onchange = e => { st.set = e.target.value; st.pack = ""; build(); };
     if ($("#fpack")) $("#fpack").onchange = e => { st.pack = e.target.value; st.cl = 240; draw(); };
     $("#fq").oninput = e => { st.q = e.target.value; st.cl = 240; draw(); };
@@ -652,7 +740,10 @@ window.addEventListener("resize", setHH);
 function draw() {
   saveUI();
   const body = $("#body"), q = st.q.trim().toLowerCase();
-  if (tab === "cards") {
+  if (tab === "cards" && !st.grid) {
+    body.className = "";
+    body.innerHTML = cardsListHtml() || '<p class="empty">Ничего не найдено</p>';
+  } else if (tab === "cards") {
     let list = cf();
     const have = list.filter(c => owned.has(cid(c))).length;
     $("#prog").innerHTML = "Собрано " + have + " из " + list.length + meter(have, list.length);
@@ -682,7 +773,7 @@ function draw() {
       } else body.innerHTML = '<div class="dgrid">' + list.map(pkTile).join("") + "</div>";
     }
   } else if (tab === "stats") {
-    drawStats(body);
+    try { drawStats(body); } catch (e) { body.innerHTML = '<p class="empty">Не удалось построить статистику: ' + esc(String(e && e.message || e)) + "</p>"; }
   } else {
     if (!Object.keys(MIS).length) { body.innerHTML = '<p class="empty">Миссии не загружены. Проверь, что файл missions.js лежит в репозитории рядом с index.html.</p>'; return; }
     const k = (st.mset || "").toLowerCase(), all = MIS[k] || [];
@@ -720,6 +811,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") { if (st.car
 document.addEventListener("click", e => {
   const ss = e.target.closest ? e.target.closest(".ssort button") : null;
   if (ss) { const bar = ss.parentElement, key = bar.dataset.sk; accSort[key] = ss.dataset.m; try { localStorage.setItem(ASKEY, JSON.stringify(accSort)); } catch (er) {} bar.querySelectorAll("button").forEach(b => b.classList.toggle("on", b === ss)); if (bar.nextElementSibling) bar.nextElementSibling.innerHTML = rowsOf(key); return; }
+  const sr = e.target.closest ? e.target.closest(".srow") : null;
+  if (sr) { st.sscroll = window.scrollY || 0; openGrid(sr.dataset.set, sr.dataset.pack ? sr.dataset.set + "|" + sr.dataset.pack : ""); return; }
   const mv = e.target.closest("[data-mv]");
   const fd = !mv && e.target.closest("[data-fold]");
   if (fd) { const p = fd.dataset.fold.split("|"), x = MIS[p[0]][+p[1]], id = mid(p[0], x), cur = foldOv[id] !== undefined ? foldOv[id] : true; foldOv[id] = !cur; saveFold(); draw(); return; }
@@ -773,6 +866,7 @@ $("#nav").onclick = e => {
     buildDex(slugs); indexSpecies(); buildMIS();
     if (st.set && !sets.some(x => x.code === st.set)) st.set = "";
     if (st.mset && !sets.some(x => x.code === st.mset)) st.mset = "";
+    if (st.set && !sets.some(x => x.code === st.set)) { st.set = ""; st.pack = ""; }
     if (st.pack && !sets.some(x => x.code === st.pack.split("|")[0])) st.pack = "";
     try { if (dataFixes.length) console.info("Автоисправления данных (сам файл не меняется):", dataFixes); } catch (e) {}
     document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x.dataset.t === tab));
