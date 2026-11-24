@@ -21,7 +21,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Коллекция">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Моя коллекция TCGP</title>
+<title>ProDex</title>
 <style>
 :root{--bg:#f3f1fa;--sf:#fff;--tx:#1f1b33;--mt:#6f6a85;--ac:#5b3fd6;--ln:#ddd8ee;--ok:#2a9d6a;color-scheme:light;
 box-sizing:border-box;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
@@ -138,7 +138,7 @@ input{flex:1;min-width:140px}
 </head>
 <body>
 <header>
-  <h1>Моя коллекция</h1>
+  <h1>ProDex</h1>
   <nav id="nav">
     <button data-t="cards" class="on">Карточки</button>
     <button data-t="species">Покемоны</button>
@@ -668,7 +668,7 @@ function packOpts() {
 }
 let bySetMap = null;
 const setCards = code => { if (!bySetMap || bySetMap.n !== cards.length) { bySetMap = new Map(); cards.forEach(c => { if (!bySetMap.has(c.set)) bySetMap.set(c.set, []); bySetMap.get(c.set).push(c); }); bySetMap.n = cards.length; } return bySetMap.get(code) || []; };
-const RCAT = { d: ["C", "U", "R", "RR"], s: ["AR", "SR", "SAR", "IM"], c: ["UR"], h: ["S", "SSR"] }, RICON = { d: "◆", s: "★", c: "♛", h: "✦" };
+const RCAT = { d: ["C", "U", "R", "RR"], s: ["AR", "SR", "SAR", "IM"], h: ["S", "SSR"], c: ["UR"] }, RICON = { d: "◆", s: "★", h: "✦", c: "♛" };
 const gotN = l => l.filter(c => owned.has(cid(c))).length;
 const chipsHtml = list => '<span class="rch">' + Object.keys(RCAT).map(k => { const l = list.filter(c => RCAT[k].includes(c.rarity)); return l.length ? '<i class="rc ' + k + '">' + RICON[k] + " " + gotN(l) + "/" + l.length + "</i>" : ""; }).join("") + "</span>";
 let setImgs = null;
