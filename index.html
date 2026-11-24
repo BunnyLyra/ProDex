@@ -147,7 +147,7 @@ input{flex:1;min-width:140px}
   </nav>
 </header>
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
-<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v37</footer>
+<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v38</footer>
 
 <div id="pv" hidden></div>
 <div id="cv" hidden></div>
@@ -401,6 +401,35 @@ function prRates(code) {
   const base = sets.find(x => PR[x.code] && /^[A-Z]\d$/.test(x.code));   /* для сета без таблицы берём шансы новейшего большого сета (sets идут от новых к старым) */
   return base ? { r: PR[base.code], est: true, from: base.code } : null;
 }
+/* Шанс выпадения каждой карточки в каждом паке (из pullRates.json) для рейтинга миссий */
+function packModel() {
+  const packs = [], cp = new Map();
+  sets.forEach(x => {
+    const pr = prRates(x.code); if (!pr) return;
+    packsFor(x).forEach(pn => {
+      const pool = setCards(x.code).filter(c => (c.packs || []).includes(pn)); if (!pool.length) return;
+      const pi = packs.length; packs.push({ set: x, pack: pn });
+      const types = Object.values(pr.r), tot = types.reduce((a, t) => a + (+t.appearance_rate || 0), 0) || 1, tc = {}, rate = {};
+      const tcount = code => { if (!(code in tc)) { const ok = PR_MAP[code] || [code]; tc[code] = pool.filter(c => ok.includes(c.rarity)).length; } return tc[code]; };
+      types.forEach(t => { const w = (+t.appearance_rate || 0) / tot; Object.values(t.slots || {}).forEach(sl => Object.keys(sl).forEach(code => { const n = tcount(code); if (!n) return; (PR_MAP[code] || [code]).forEach(rr => { rate[rr] = (rate[rr] || 0) + w * sl[code] / 100 / n; }); })); });
+      pool.forEach(c => { const p = rate[c.rarity]; if (p) { const a = cp.get(cid(c)) || []; a.push([pi, p]); cp.set(cid(c), a); } });
+    });
+  });
+  return { packs, cp };
+}
+function reqEffort(r, model) {   /* примерное число паков, чтобы закрыть условие: сколько ещё нужно / сколько таких карт в среднем даёт лучший пак */
+  const p = rprog(r), rem = p.t - p.h; if (rem <= 0) return 0;
+  const acc = {}; p.cs.forEach(c => { if (!r.c && owned.has(cid(c))) return; (model.cp.get(cid(c)) || []).forEach(z => { acc[z[0]] = (acc[z[0]] || 0) + z[1]; }); });
+  const best = Math.max(0, ...Object.values(acc)); return best > 0 ? rem / best : Infinity;
+}
+function missionEffort(k, x, model) {   /* null: миссию паками не закрыть (ручной счётчик) */
+  if (x.manual) return null;
+  if (x.filter) { const pool = cards.filter(c => matches(c, x.filter)); return reqEffort({ f: x.filter, n: x.need || pool.length }, model); }
+  const eff = (x.groups || []).map(g => { const r = reqOf(g), p = rprog(r); return { e: reqEffort(r, model), done: p.h >= p.t }; });
+  if (x.need) { const left = Math.max(0, x.need - eff.filter(z => z.done).length); return eff.filter(z => !z.done).map(z => z.e).sort((a, b) => a - b).slice(0, left).reduce((a, b) => a + b, 0); }
+  return eff.reduce((a, z) => a + z.e, 0);
+}
+const packsTxt = e => { if (!isFinite(e)) return "нет в паках"; const v = e < 10 ? Math.round(e * 10) / 10 : Math.round(e), i = Number.isInteger(v), a = v % 100, b = a % 10; return "≈ " + String(v).replace(".", ",") + " " + (!i ? "пака" : a > 10 && a < 20 ? "паков" : b === 1 ? "пак" : b >= 2 && b <= 4 ? "пака" : "паков"); };
 function packAdvice(pred) {
   pred = pred || (c => !owned.has(cid(c)));
   const out = [];
@@ -475,7 +504,9 @@ function drawStats(body) {
   const ms = []; Object.keys(MIS).forEach(k => MIS[k].forEach(x => ms.push({ k, x, s: mst(k, x) })));
   const md = ms.filter(o => o.s.done).length;
   let sp = 0, spT = 0; dex.forEach(d => { const p = prog(d); if (p.t) { spT++; if (p.h) sp++; } });
-  const todo = ms.filter(o => !o.s.done && o.s.t > 0).map(o => ({ o, left: o.s.t - o.s.h })).sort((a, b) => a.left - b.left || (b.o.s.h / b.o.s.t) - (a.o.s.h / a.o.s.t));
+  let model = null; try { if (PR) model = packModel(); } catch (e) { model = null; }
+  const todo = ms.filter(o => !o.s.done && o.s.t > 0).map(o => { const left = o.s.t - o.s.h; let eff = left; if (model) { try { const v = missionEffort(o.k, o.x, model); eff = v == null ? Infinity : v; } catch (e) { eff = left; } } return { o, left, eff }; })
+    .sort((a, b) => (a.eff === b.eff ? 0 : !isFinite(a.eff) ? 1 : !isFinite(b.eff) ? -1 : a.eff - b.eff) || a.left - b.left);
   const nextM = todo[0];
   const favPred = c => c.sp && fav.has(c.sp) && !owned.has(cid(c));
   let nid = null; const misPred = c => { if (!nid) nid = neededIds(); return nid.has(cid(c)); };
@@ -485,27 +516,27 @@ function drawStats(body) {
   try { advM = packAdvice(misPred); } catch (e) { advM = []; }
   const heroBest = (list, title, unit) => {   /* Deluxe-паки временные: в плитке берём лучший из обычных паков */
     const b = list.find(a => !isDlx(a) && a.e > 0), top = list.find(a => a.e > 0); if (!b) return "";
-    return '<div class="hc"><small>' + title + '</small><div class="big">≈' + b.e.toFixed(1) + '</div><div class="sub">' + esc(setName(b.set) + " · " + b.pack) + " · " + unit + "</div></div>";
+    return '<div class="hc"><small>' + title + '</small><div class="big">≈' + b.e.toFixed(1) + '</div><div class="sub">' + esc(setName(b.set) + " · " + b.pack) + "</div></div>";
   };
   let out = '<div class="hero">' + hc("Карточки", got(cards), cards.length, "копий: " + cards.reduce((a, c) => a + qty(cid(c)), 0)) + (ms.length ? hc("Миссии", md, ms.length) : "") + (spT ? hc("Покемоны", sp, spT, "видов") : "") + heroBest(adv, "Лучший пак сейчас", "новых карт") + heroBest(advF, "Лучший пак для избранных", "нужных карт") + heroBest(advM, "Лучший пак для миссий", "нужных карт") + "</div>";
   out += safe("Какой пак открывать", () => adv.length ? acc("🎯", "Какой пак открывать", "ожидаемое число новых карт", adviceHtml(adv)) : "");
   out += safe("Избранные покемоны", () => {
-    const fl = favMissing().filter(f => f.miss.length);
-    if (!fl.length) return acc("💗", "Избранные покемоны: чего не хватает", fav.size ? "у избранных всё собрано" : "нет избранных", '<p class="prog">' + (fav.size ? "Все карточки избранных покемонов уже собраны." : "Отметь покемона сердечком на его странице, и здесь появится, каких карточек ему не хватает и в каких паках они лежат.") + "</p>");
+    const favAll = favMissing(), fl = favAll.filter(f => f.miss.length);
+    if (!fl.length) return acc("💗", "Избранные покемоны: чего не хватает", favAll.length ? "в избранном: " + favAll.length + " · всё собрано" : "нет избранных", '<p class="prog">' + (fav.size ? "Все карточки избранных покемонов уже собраны." : "Отметь покемона сердечком на его странице, и здесь появится, каких карточек ему не хватает и в каких паках они лежат.") + "</p>");
     const packCount = {}, rows = fl.map(f => {
       const pc = {}; f.miss.forEach(c => { const z = sets.find(q => q.code === c.set); (c.packs && c.packs.length ? c.packs : ["без пака"]).forEach(pn => { const lab = (z ? setName(z) : c.set) + " · " + pn; pc[lab] = (pc[lab] || 0) + 1; packCount[lab] = (packCount[lab] || 0) + 1; }); });
       const where = Object.keys(pc).sort((a, b) => pc[b] - pc[a]).slice(0, 8).map(k => k + " ×" + pc[k]).join("; ");
       return '<div class="gt">' + escG(f.d.name) + ' <span class="prog">#' + f.d.id + "</span> · " + (f.miss.length ? "не хватает " + f.miss.length + " из " + f.total : "собраны все " + f.total) + "</div>" + (f.miss.length ? '<div class="prog ind">Где искать: ' + esc(where) + "</div>" : "");
     }).join("");
     const top = Object.keys(packCount).sort((a, b) => packCount[b] - packCount[a]).slice(0, 8).map(k => '<div class="irow"><span>' + esc(k) + "</span><b>" + packCount[k] + " карт</b></div>").join("");
-    return acc("💗", "Избранные покемоны: чего не хватает", fl.length + " избранных, не хватает " + fl.reduce((a, f) => a + f.miss.length, 0) + " карт", (top ? '<div class="gt">Паки с наибольшим числом нужных карточек</div>' + top : "") + rows);
+    return acc("💗", "Избранные покемоны: чего не хватает", "в избранном: " + favAll.length + " · недобрано: " + fl.length + " · не хватает карт: " + fl.reduce((a, f) => a + f.miss.length, 0), (top ? '<div class="gt">Паки с наибольшим числом нужных карточек</div>' + top : "") + rows);
   });
   out += safe("Пак для избранных", () => advF.some(a => a.miss) ? acc("💗", "Какой пак открывать для избранных", "ожидаемо нужных карт", adviceHtml(advF.filter(a => a.miss > 0), "нужных")) : "");
   out += safe("Пак для миссий", () => advM.some(a => a.miss) ? acc("🧩", "Какой пак открывать для миссий", "ожидаемо нужных для миссий карт", '<p class="prog" style="font-size:12px">Учитываются недостающие карточки из невыполненных миссий (широкие условия вроде «любые 100 ex» не считаются).</p>' + adviceHtml(advM.filter(a => a.miss > 0), "нужных")) : "");
   if (todo.length) {
     const by = {}; todo.forEach(t => { (by[t.o.k] = by[t.o.k] || []).push(t); });
-    out += acc("🧭", "Какие миссии лучше закрывать", "ближайшие к выполнению по сетам", '<p class="prog">Сначала те миссии, где осталось меньше всего карточек или копий. Показаны три ближайшие в каждом сете, сеты идут от самого близкого к выполнению.</p>' +
-      Object.keys(by).sort((a, b) => by[a][0].left - by[b][0].left).map(k => { const z = sets.find(q => q.code.toLowerCase() === k); return '<div class="gt">' + esc(z ? setName(z) : k) + "</div>" + by[k].slice(0, 3).map(t => '<div class="irow"><span>' + (isSec(k, t.o.x) ? "🔒 " : "") + esc(t.o.x.title) + "</span><b>" + t.o.s.h + " / " + t.o.s.t + " · ещё " + t.left + "</b></div>").join(""); }).join(""));
+    out += acc("🧭", "Какие миссии лучше закрывать", "ближайшие к выполнению по сетам", '<p class="prog">Сначала миссии, которые быстрее закрыть. Учитывается и сколько карточек или копий осталось, и шанс их выпадения в паках (pullRates.json): «≈ N паков» это примерное число паков, если открывать лучший для этих карточек пак. Показаны три лучшие в каждом сете.</p>' +
+      Object.keys(by).sort((a, b) => (by[a][0].eff === by[b][0].eff ? 0 : !isFinite(by[a][0].eff) ? 1 : !isFinite(by[b][0].eff) ? -1 : by[a][0].eff - by[b][0].eff) || by[a][0].left - by[b][0].left).map(k => { const z = sets.find(q => q.code.toLowerCase() === k); return '<div class="gt">' + esc(z ? setName(z) : k) + "</div>" + by[k].slice(0, 3).map(t => '<div class="irow"><span>' + (isSec(k, t.o.x) ? "🔒 " : "") + esc(t.o.x.title) + "</span><b>" + t.o.s.h + " / " + t.o.s.t + " · ещё " + t.left + (model ? " · " + (t.o.x.manual ? "вручную" : packsTxt(t.eff)) : "") + "</b></div>").join(""); }).join(""));
   }
   if (ms.length) {
     const msetRows = sec => Object.keys(MIS).map(k => { const l = ms.filter(o => o.k === k && isSec(o.k, o.x) === sec), z = sets.find(q => q.code.toLowerCase() === k); return { n: z ? setName(z) + " (" + z.code + ")" : k, a: l.filter(o => o.s.done).length, b: l.length }; }).filter(r => r.b > 0);
@@ -642,26 +673,30 @@ const gotN = l => l.filter(c => owned.has(cid(c))).length;
 const chipsHtml = list => '<span class="rch">' + Object.keys(RCAT).map(k => { const l = list.filter(c => RCAT[k].includes(c.rarity)); return l.length ? '<i class="rc ' + k + '">' + RICON[k] + " " + gotN(l) + "/" + l.length + "</i>" : ""; }).join("") + "</span>";
 let setImgs = null;
 async function loadSetImgs() {
-  try { const c = JSON.parse(localStorage.getItem("tcgp-setimgs-v1") || "null"); if (c && c.list && c.list.length && Date.now() - c.t < 6048e5) { setImgs = c.list; return; } } catch (e) {}
+  let cached = null; try { cached = JSON.parse(localStorage.getItem("tcgp-setimgs-v1") || "null"); } catch (e) {}
+  if (cached && cached.list && cached.list.length && Date.now() - cached.t < 864e5) { setImgs = cached.list; return; }
   try {
     const host = location.hostname, seg = location.pathname.split("/").filter(Boolean);
-    if (!/\.github\.io$/.test(host)) return;
-    const owner = host.split(".")[0], repo = seg[0] && !/\.html?$/.test(seg[0]) ? seg[0] : owner + ".github.io";
-    const r = await fetch("https://api.github.com/repos/" + owner + "/" + repo + "/contents/dist/images/sets");
-    if (!r.ok) return;
-    const list = (await r.json()).filter(f => f.type === "file").map(f => f.name);
-    if (list.length) { setImgs = list; try { localStorage.setItem("tcgp-setimgs-v1", JSON.stringify({ t: Date.now(), list })); } catch (e) {} }
+    if (/\.github\.io$/.test(host)) {
+      const owner = host.split(".")[0], repo = seg[0] && !/\.html?$/.test(seg[0]) ? seg[0] : owner + ".github.io";
+      const r = await fetch("https://api.github.com/repos/" + owner + "/" + repo + "/contents/dist/images/sets");
+      if (r.ok) { const list = (await r.json()).filter(f => f.type === "file").map(f => f.name); if (list.length) { setImgs = list; try { localStorage.setItem("tcgp-setimgs-v1", JSON.stringify({ t: Date.now(), list })); } catch (e) {} return; } }
+    }
   } catch (e) {}
+  if (cached && cached.list && cached.list.length) setImgs = cached.list;   /* старый список лучше, чем никакого */
 }
 function logoFile(x) {
   if (!setImgs) return null;
-  const code = x.code.toLowerCase(), nc = norm(x.code), nm = norm(setName(x)); let alt = null;
-  for (const f of setImgs) { const t = f.replace(/\.[a-z0-9]+$/i, "").toLowerCase().split(/[^a-z0-9]+/).filter(Boolean), j = t.join(""); if (j === nc || j === nm || t.includes(code)) return f; if (!alt && nm.length > 4 && j.includes(nm)) alt = f; }
-  return alt;
+  const code = x.code.toLowerCase(), nc = norm(x.code), nm = norm(setName(x));
+  const pick = l => l.find(f => /en[_-]?us/i.test(f)) || l.find(f => /(^|[^a-z])en([^a-z]|$)/i.test(f)) || l[0];   /* английская версия логотипа */
+  const hits = setImgs.filter(f => { const t = f.replace(/\.[a-z0-9]+$/i, "").toLowerCase().split(/[^a-z0-9]+/).filter(Boolean), j = t.join(""); return t.includes(code) || j === nc || j === nm; });
+  if (hits.length) return pick(hits);
+  const alt = nm.length > 4 ? setImgs.filter(f => norm(f.replace(/\.[a-z0-9]+$/i, "")).includes(nm)) : [];
+  return alt.length ? pick(alt) : null;
 }
 let logoPref = 0;
 const slug = (t, d) => String(t).toLowerCase().replace(/[^a-z0-9]+/g, d).replace(new RegExp("^" + d + "|" + d + "$", "g"), "");
-const LOGO = [x => x.code + ".webp", x => x.code + ".png", x => x.code.toLowerCase() + ".webp", x => x.code.toLowerCase() + ".png", x => slug(setName(x), "-") + ".webp", x => slug(setName(x), "-") + ".png", x => slug(setName(x), "_") + ".webp", x => setName(x) + ".webp", x => x.code + ".jpg"];
+const LOGO = [x => "LOGO_expansion_" + x.code + "_en_US.webp", x => x.code + ".webp", x => x.code + ".png", x => x.code.toLowerCase() + ".webp", x => x.code.toLowerCase() + ".png", x => slug(setName(x), "-") + ".webp", x => slug(setName(x), "-") + ".png", x => slug(setName(x), "_") + ".webp", x => setName(x) + ".webp", x => x.code + ".jpg"];
 const logoSrc = (x, k) => "dist/images/sets/" + LOGO[k](x);
 window.logoErr = el => { const t = (+el.dataset.t || 0) + 1, x = sets.find(z => z.code === el.dataset.c); if (!x || t >= LOGO.length) { el.style.display = "none"; if (el.parentNode) el.parentNode.classList.add("nologo"); return; } el.dataset.t = t; const k = (logoPref + t) % LOGO.length; el.dataset.k = k; el.src = logoSrc(x, k); };
 window.logoOk = el => { logoPref = +(el.dataset.k || 0); };
