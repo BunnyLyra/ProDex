@@ -203,6 +203,16 @@ nav{overflow-x:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}nav
 .pxrow.on{border-color:var(--ok)}
 .pxrow .pxn{flex:1;min-width:0;display:flex;flex-direction:column}
 .pxrow .pxn b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pxrow .pxn small{color:var(--mt);font-size:12px}
+.pxfm{font-style:normal;font-weight:600;color:var(--mt)}
+.pxqn{display:flex;align-items:center;gap:4px;margin-top:3px}.pxqn b{min-width:26px;text-align:center;font-size:13px}
+.pxqn button{width:22px;height:22px;border-radius:50%;border:1px solid var(--ln);background:var(--bg);color:var(--tx);padding:0;font-size:15px;line-height:1;cursor:pointer}
+.pxvt{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px;color:#fff;background:#7a7a8c;white-space:nowrap}
+.pxvt.O{background:#6b7280}.pxvt.S{background:linear-gradient(90deg,#e0a800,#ff6fb5)}.pxvt.R{background:#1f9d55}.pxvt.A{background:#3b6fd8}.pxvt.M{background:#8b4dff}.pxvt.G{background:#d6336c}
+.pxcl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pxbig .pxvt{margin-top:6px;font-size:13px;padding:2px 10px}
+.pxbig.vS{box-shadow:0 0 0 3px #ffd84d,0 0 60px rgba(255,216,77,.8)}.pxmini.vS{border-color:#e0a800}
+.pxmini.vR,.pxmini.vA,.pxmini.vM,.pxmini.vG{border-style:dashed}
+.pxpack[disabled],.pxbtn[disabled]{opacity:.45;cursor:not-allowed;animation:none}
 </style>
 </head>
 <body>
@@ -217,7 +227,7 @@ nav{overflow-x:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}nav
   </nav>
 </header>
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
-<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v39</footer>
+<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v40</footer>
 
 <div id="pv" hidden></div>
 <div id="cv" hidden></div>
@@ -298,8 +308,8 @@ try { owned = new Set(JSON.parse(localStorage.getItem(KEY) || "[]").map(x => Str
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...owned])); } catch (e) {} };
 
 let cards = [], sets = [], tab = "cards", dex = [], spMap = new Map(), keyMap = new Map();
-const st = { set: "", q: "", show: "all", mset: "", secret: false, limit: 30, grid: false, cv: "sets", sq: "", sscroll: 0, cl: 240, cardOpen: "", wish: false, alt: false, pack: "", gen: "", favOnly: false, flt: "all", sort: "num", open: 0, scroll: 0, pv: "box", pq: "", pf: "all", pg: "" };
-const UIKEY = "tcgp-ui-v1", UI_FIELDS = ["grid", "cv", "sq", "set", "pack", "q", "show", "wish", "alt", "gen", "favOnly", "flt", "sort", "mset", "secret", "pv", "pf", "pg"];
+const st = { set: "", q: "", show: "all", mset: "", secret: false, limit: 30, grid: false, cv: "sets", sq: "", sscroll: 0, cl: 240, cardOpen: "", wish: false, alt: false, pack: "", gen: "", favOnly: false, flt: "all", sort: "num", open: 0, scroll: 0, pv: "box", pq: "", pf: "all", pg: "", pc: "", dq: "", dc: "" };
+const UIKEY = "tcgp-ui-v1", UI_FIELDS = ["grid", "cv", "sq", "set", "pack", "q", "show", "wish", "alt", "gen", "favOnly", "flt", "sort", "mset", "secret", "pv", "pf", "pg", "pc", "dc"];
 try { const u = JSON.parse(localStorage.getItem(UIKEY) || "null"); if (u) { UI_FIELDS.forEach(k => { if (u[k] !== undefined) st[k] = u[k]; }); if (["cards", "species", "missions", "stats", "pack"].includes(u.tab)) tab = u.tab; } } catch (e) {}
 function saveUI() { try { const o = { tab }; UI_FIELDS.forEach(k => { o[k] = st[k]; }); localStorage.setItem(UIKEY, JSON.stringify(o)); } catch (e) {} }
 const cid = c => (c.set + "-" + c.number).toLowerCase();
@@ -651,7 +661,7 @@ function drawStats(body) {
   body.innerHTML = out;
   const bx = $("#bkx"), bi = $("#bki"); if (bx) bx.onclick = exportData; if (bi) bi.onchange = importData;
 }
-const BK_KEYS = ["tcgp-owned-v1", "tcgp-qty-v1", "tcgp-wish-v1", "tcgp-alt-v1", "tcgp-mis-v1", "tcgp-sec-v2", "tcgp-fold-v1", "tcgp-fav-v1", "tcgp-ui-v1", "tcgp-phys-v1", "tcgp-pack-v1"];
+const BK_KEYS = ["tcgp-owned-v1", "tcgp-qty-v1", "tcgp-wish-v1", "tcgp-alt-v1", "tcgp-mis-v1", "tcgp-sec-v2", "tcgp-fold-v1", "tcgp-fav-v1", "tcgp-ui-v1", "tcgp-phys-v1", "tcgp-pack-v1", "tcgp-physv-v1", "tcgp-pxcfg-v1"];
 function exportData() {
   const data = {}; BK_KEYS.forEach(k => { try { const v = localStorage.getItem(k); if (v != null) data[k] = v; } catch (e) {} });
   const txt = JSON.stringify({ app: "tcgp", v: 1, date: new Date().toISOString(), data }), name = "tcgp-backup-" + new Date().toISOString().slice(0, 10) + ".json";
@@ -663,30 +673,60 @@ function exportData() {
 function importData(e) {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   const r = new FileReader();
-  r.onload = () => { try { const o = JSON.parse(r.result); if (!o || o.app !== "tcgp" || !o.data) throw 0; if (!confirm("Заменить текущие данные данными из копии?")) return; Object.keys(o.data).forEach(k => { if (BK_KEYS.includes(k)) localStorage.setItem(k, o.data[k]); }); location.reload(); } catch (err) { alert("Это не копия данных приложения."); } };
+  r.onload = () => { try { const o = JSON.parse(r.result); if (!o || o.app !== "tcgp" || !o.data) throw 0; if (!confirm("Заменить текущие данные данными из копии?")) return; if (o.data["tcgp-phys-v1"] != null && o.data["tcgp-physv-v1"] == null) localStorage.removeItem("tcgp-physv-v1"); Object.keys(o.data).forEach(k => { if (BK_KEYS.includes(k)) localStorage.setItem(k, o.data[k]); }); location.reload(); } catch (err) { alert("Это не копия данных приложения."); } };
   r.readAsText(f);
 }
 
 /* ===== Pack: виртуальный бустер ProDex и физическая коллекция =====
    Отдельная система: не трогает карточки (owned / copies). Хранит только:
-   tcgp-phys-v1 — номера видов, которые есть в физической коллекции;
-   tcgp-pack-v1 — счётчик открытий и последнее открытие.
+   tcgp-physv-v1 — физическая коллекция по вариантам: {v:1, c:{id варианта: сколько раз получен}};
+   tcgp-phys-v1  — прежний список видов (Original); при первом запуске переносится в tcgp-physv-v1 и дальше поддерживается для совместимости;
+   tcgp-pxcfg-v1 — настройки выпадения (режим, категории, выключенные варианты);
+   tcgp-pack-v1  — счётчик открытий и последнее открытие.
+   Каталог вариантов — dist/variants.json (6 категорий: Original, Shiny, Regional, Alternative, Mega, Gigantamax).
    Результат пака сохраняется сразу в момент открытия, поэтому перезагрузка ничего не начисляет повторно. */
-/* Вес одного вида по официальной категории (вариант B): обычный 10, Legendary 2, Mythical 1 */
+/* Вес вида по официальной категории (вариант B): обычный 10, Legendary 2, Mythical 1 */
 const PX_W = { "": 10, L: 2, M: 1 };
+/* Множитель категории варианта. Alternative: 1 на все альтернативные формы вида, делится между ними поровну. */
+const PX_CF = { O: 1, S: 0.1, R: 1, A: 1, M: 0.25, G: 0.25 };
 const PX_SIZE = 5, PX_TOTAL = 1025;
+const PX_CATS = ["O", "S", "R", "A", "M", "G"];
+const PX_CN = { O: "Original", S: "Shiny", R: "Regional Forms", A: "Alternative Forms", M: "Mega Evolution", G: "Gigantamax" };
 /* Запасные официальные списки (PokeAPI is_legendary / is_mythical) на случай, если dist/pokedex.json не загрузился */
 const PX_LEG = [144,145,146,150,243,244,245,249,250,377,378,379,380,381,382,383,384,480,481,482,483,484,485,486,487,488,638,639,640,641,642,643,644,645,646,716,717,718,772,773,785,786,787,788,789,790,791,792,800,888,889,890,891,892,894,895,896,897,898,905,1001,1002,1003,1004,1007,1008,1014,1015,1016,1017,1024];
 const PX_MYTH = [151,251,385,386,489,490,491,492,493,494,647,648,649,719,720,721,801,802,807,808,809,893,1025];
 const PX_CAT = { L: "Legendary", M: "Mythical" };
-const PXKEY = "tcgp-phys-v1", PPKEY = "tcgp-pack-v1";
-let phys = new Set(), pstat = { n: 0, last: [], fresh: [], t: "" };
-try { phys = new Set((JSON.parse(localStorage.getItem(PXKEY) || "[]") || []).map(Number).filter(x => x >= 1 && x <= PX_TOTAL)); } catch (e) {}
-try { const o = JSON.parse(localStorage.getItem(PPKEY) || "null"); if (o && typeof o === "object") pstat = { n: +o.n || 0, last: Array.isArray(o.last) ? o.last.map(Number) : [], fresh: Array.isArray(o.fresh) ? o.fresh : [], t: o.t || "" }; } catch (e) {}
-const savePhys = () => { try { localStorage.setItem(PXKEY, JSON.stringify([...phys].sort((a, b) => a - b))); } catch (e) {} };
+const PXKEY = "tcgp-phys-v1", PPKEY = "tcgp-pack-v1", PVKEY = "tcgp-physv-v1", PCKEY = "tcgp-pxcfg-v1";
+let pstat = { n: 0, last: [], fresh: [], t: "" }, pcnt = new Map(), pxMigrated = false;
+try { const o = JSON.parse(localStorage.getItem(PPKEY) || "null"); if (o && typeof o === "object") pstat = { n: +o.n || 0, last: Array.isArray(o.last) ? o.last.map(String) : [], fresh: Array.isArray(o.fresh) ? o.fresh : [], t: o.t || "" }; } catch (e) {}
+try {
+  const o = JSON.parse(localStorage.getItem(PVKEY) || "null");
+  if (o && o.c && typeof o.c === "object") Object.keys(o.c).forEach(k => { const n = Math.floor(+o.c[k]); if (n > 0) pcnt.set(String(k), n); });
+  else { /* миграция: прежние отмеченные виды → Original с количеством 1 */
+    const old = JSON.parse(localStorage.getItem(PXKEY) || "[]") || [];
+    old.map(Number).filter(x => x >= 1 && x <= PX_TOTAL).forEach(id => pcnt.set(String(id), 1));
+    pxMigrated = true;
+  }
+} catch (e) {}
+const savePhys = () => { try {
+  localStorage.setItem(PVKEY, JSON.stringify({ v: 1, c: Object.fromEntries(pcnt) }));
+  localStorage.setItem(PXKEY, JSON.stringify([...pcnt.keys()].filter(k => /^\d+$/.test(k)).map(Number).sort((a, b) => a - b)));
+} catch (e) {} };
 const savePstat = () => { try { localStorage.setItem(PPKEY, JSON.stringify(pstat)); } catch (e) {} };
+if (pxMigrated) savePhys();
+const pxHas = id => (pcnt.get(id) || 0) > 0;
+/* настройки выпадения */
+let pcfg = { mode: "all", cats: { O: 1, S: 1, R: 1, A: 1, M: 1, G: 1 }, off: null };
+try { const o = JSON.parse(localStorage.getItem(PCKEY) || "null"); if (o && typeof o === "object") {
+  if (["all", "cats", "pick"].includes(o.mode)) pcfg.mode = o.mode;
+  if (o.cats) PX_CATS.forEach(c => { if (o.cats[c] !== undefined) pcfg.cats[c] = o.cats[c] ? 1 : 0; });
+  if (Array.isArray(o.off)) pcfg.off = o.off.map(String);
+} } catch (e) {}
+let pxOff = new Set(pcfg.off || []);
+const savePcfg = () => { try { pcfg.off = pcfg.off === null ? null : [...pxOff]; localStorage.setItem(PCKEY, JSON.stringify(pcfg)); } catch (e) {} };
 const pdxReady = getJson(["dist/pokedex.json"]).catch(() => null);
-let pdx = [], pdxById = new Map(), pxCum = [], pxSum = 0;
+const pvReady = getJson(["dist/variants.json"]).catch(() => null);
+let pdx = [], pdxById = new Map(), pxv = [], pxvById = new Map(), pxBySp = new Map(), pxOn = [], pxCum = [], pxSum = 0;
 function buildPdx(j) {
   const L = new Set(PX_LEG), M = new Set(PX_MYTH), fromFile = new Map(), fromDex = new Map(dex.map(d => [d.id, d.name]));
   if (j && Array.isArray(j.list)) j.list.forEach(r => { if (Array.isArray(r) && +r[0] >= 1 && +r[0] <= PX_TOTAL) fromFile.set(+r[0], r); });
@@ -697,88 +737,173 @@ function buildPdx(j) {
     pdx.push({ id, name: r ? String(r[1]) : (fromDex.get(id) || "Покемон #" + id), cat, gen: genOf(id) });
   }
   pdxById = new Map(pdx.map(p => [p.id, p]));
-  pxCum = []; pxSum = 0; pdx.forEach(p => { pxSum += PX_W[p.cat]; pxCum.push(pxSum); });
 }
+/* каталог вариантов: [id, номер, категория, форма, картинка]; без файла остаются только Original */
+function buildPxv(j) {
+  const seen = new Set(), ord = { O: 0, S: 1, R: 2, A: 3, M: 4, G: 5 };
+  pxv = [];
+  const add = (id, d, c, form, img) => { const p = pdxById.get(d); if (!p || !PX_CN[c] || seen.has(id)) return; seen.add(id); pxv.push({ id, dex: d, cat: c, form, img, name: p.name, rar: p.cat, gen: p.gen, i: pxv.length }); };
+  if (j && Array.isArray(j.list)) j.list.forEach(r => { if (Array.isArray(r)) add(String(r[0]), +r[1], String(r[2]), String(r[3] || ""), String(r[4] || r[1])); });
+  pdx.forEach(p => add(String(p.id), p.id, "O", "", String(p.id)));
+  pxv.sort((a, b) => a.dex - b.dex || ord[a.cat] - ord[b.cat] || a.i - b.i);
+  pxvById = new Map(pxv.map(v => [v.id, v]));
+  pxBySp = new Map(); pxv.forEach(v => { if (!pxBySp.has(v.dex)) pxBySp.set(v.dex, []); pxBySp.get(v.dex).push(v); });
+  pxv.forEach(v => { v.w = PX_W[v.rar] * PX_CF[v.cat] / (v.cat === "A" ? pxBySp.get(v.dex).filter(x => x.cat === "A").length : 1); });
+  pxRecalc();
+}
+const pxEnabled = v => pcfg.mode === "all" ? true : pcfg.mode === "cats" ? !!pcfg.cats[v.cat] : !pxOff.has(v.id);
+function pxRecalc() { pxOn = pxv.filter(pxEnabled); pxCum = []; pxSum = 0; pxOn.forEach(v => { pxSum += v.w; pxCum.push(pxSum); }); }
 function pxRand() { try { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 4294967296; } catch (e) { return Math.random(); } }
-function pxPick() { const r = pxRand() * pxSum; let lo = 0, hi = pxCum.length - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (pxCum[m] > r) hi = m; else lo = m + 1; } return pdx[lo].id; }
-/* Открытие: ровно 5 видов, повторы разрешены. Сразу записываем в физическую коллекцию. */
+function pxPick() { const r = pxRand() * pxSum; let lo = 0, hi = pxCum.length - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (pxCum[m] > r) hi = m; else lo = m + 1; } return pxOn[lo].id; }
+/* Открытие: ровно 5 вариантов из включённых, повторы разрешены. Сразу записываем в физическую коллекцию (счётчик по id варианта). */
 function pxOpenPack() {
+  if (!pxOn.length) return null;
   const ids = []; for (let i = 0; i < PX_SIZE; i++) ids.push(pxPick());
-  const seen = new Set(phys), fresh = ids.map(id => { const f = !seen.has(id); seen.add(id); return f; });
-  ids.forEach(id => phys.add(id));
+  const seen = new Set(), fresh = ids.map(id => { const f = !pxHas(id) && !seen.has(id); seen.add(id); return f; });
+  ids.forEach(id => pcnt.set(id, (pcnt.get(id) || 0) + 1));
   pstat = { n: pstat.n + 1, last: ids, fresh, t: new Date().toISOString() };
   savePhys(); savePstat();
   return { ids, fresh };
 }
-window.__prodexPack = { pick: () => pxPick(), list: () => pdx, weights: PX_W };
-window.pxErr = el => { const t = (+el.dataset.t || 0) + 1; if (t >= SPR.length) { const s = document.createElement("span"); s.className = "pxph " + (el.className || ""); s.textContent = "#" + el.dataset.d; el.replaceWith(s); return; } el.dataset.t = t; el.src = SPR[t](el.dataset.d); };
-const pxImg = (id, lazy) => '<img' + (lazy ? ' loading="lazy"' : "") + ' alt="" src="' + SPR[0](id) + '" data-d="' + id + '" data-t="0" onerror="pxErr(this)">';
+window.__prodexPack = { pick: () => pxPick(), list: () => pdx, variants: () => pxv, enabled: () => pxOn, weights: PX_W, factors: PX_CF, cfg: () => pcfg, counts: () => pcnt };
+const VSPR = [
+  k => "https://cdn.jsdelivr.net/gh/PokeAPI/sprites@master/sprites/pokemon/other/home/" + k + ".png",
+  k => "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/" + k + ".png",
+  k => "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + k + ".png"
+];
+window.pxErr = el => { const t = (+el.dataset.t || 0) + 1; if (t >= VSPR.length) { const s = document.createElement("span"); s.className = "pxph " + (el.className || ""); s.textContent = "#" + el.dataset.n; el.replaceWith(s); return; } el.dataset.t = t; el.src = VSPR[t](el.dataset.d); };
+const pxV = id => pxvById.get(id) || (p => ({ id, dex: p ? p.id : 0, cat: "O", form: "", img: String(id), name: p ? p.name : "#" + id, rar: p ? p.cat : "", gen: p ? p.gen : 0 }))(pdxById.get(+id));
+const pxImg = (v, lazy) => '<img' + (lazy ? ' loading="lazy"' : "") + ' alt="" src="' + VSPR[0](v.img) + '" data-d="' + esc(v.img) + '" data-n="' + v.dex + '" data-t="0" onerror="pxErr(this)">';
 const pxCatTag = c => c ? '<span class="pxcat ' + c + '">' + PX_CAT[c] + "</span>" : "";
+const pxFormLbl = v => v.cat === "O" ? "" : v.cat === "S" ? "✨ Shiny" : v.form;
+const pxVTag = v => v.cat === "O" ? "" : '<span class="pxvt ' + v.cat + '">' + esc(pxFormLbl(v)) + "</span>";
+const pxNo = v => "#" + v.dex + (v.cat !== "O" ? " · " + esc(pxFormLbl(v)) : "") + (v.rar ? " · " + PX_CAT[v.rar] : "");
 function pxMini(id, isNew, delay) {
-  const p = pdxById.get(id) || { id, name: "#" + id, cat: "" };
-  return '<div class="pxmini ' + p.cat + '"' + (delay != null ? ' style="animation-delay:' + delay + 's"' : "") + ">" + (isNew ? '<span class="pxnew">NEW</span>' : "") + pxImg(id, false) +
-    '<span class="nm">' + escG(p.name) + '</span><span class="no">#' + id + (p.cat ? " · " + PX_CAT[p.cat] : "") + "</span></div>";
+  const v = pxV(id);
+  return '<div class="pxmini ' + v.rar + " v" + v.cat + '"' + (delay != null ? ' style="animation-delay:' + delay + 's"' : "") + ">" + (isNew ? '<span class="pxnew">NEW</span>' : "") + pxImg(v, false) +
+    '<span class="nm">' + escG(v.name) + '</span><span class="no">' + pxNo(v) + "</span></div>";
 }
 const PX_ART_IN = '<span class="pxshine"></span><span class="pxlogo">ProDex</span><span class="pxball"></span><span class="pxtag">BOOSTER PACK<br><b>5 POKÉMON</b></span>';
 const pxArt = cls => '<span class="pxpack' + (cls ? " " + cls : "") + '">' + PX_ART_IN + "</span>";
+const pxPct = x => x >= 0.1 ? x.toFixed(1) : x >= 0.01 ? x.toFixed(2) : x > 0 ? x.toFixed(3) : "0";
 function pxOdds() {
-  const n = { "": 0, L: 0, M: 0 }; pdx.forEach(p => n[p.cat]++);
-  const rowO = (lab, c) => { const slot = n[c] * PX_W[c] / pxSum, pack = 1 - Math.pow(1 - slot, PX_SIZE); return "<tr><td>" + lab + "</td><td>" + n[c] + "</td><td>" + PX_W[c] + "</td><td>" + (slot * 100).toFixed(2) + "%</td><td>" + (PX_W[c] / pxSum * 100).toFixed(3) + "%</td><td>" + (c ? (pack * 100).toFixed(1) + "% (1 из " + Math.round(1 / pack) + ")" : "—") + "</td></tr>"; };
-  return '<table class="pxodds"><tr><th>Категория</th><th>Видов</th><th>Вес</th><th>Место в паке</th><th>Конкретный вид</th><th>Хотя бы 1 в паке</th></tr>' + rowO("Обычные", "") + rowO("Legendary", "L") + rowO("Mythical", "M") + "</table>";
+  if (!pxSum) return '<p class="prog">Ничего не включено для выпадения.</p>';
+  const row = c => { const on = pxOn.filter(v => v.cat === c), all = pxv.filter(v => v.cat === c).length, w = on.reduce((s, v) => s + v.w, 0), slot = w / pxSum, pack = 1 - Math.pow(1 - slot, PX_SIZE);
+    return "<tr><td>" + PX_CN[c] + "</td><td>" + on.length + " / " + all + "</td><td>" + PX_CF[c].toString().replace(".", ",") + (c === "A" ? "*" : "") + "</td><td>" + pxPct(slot * 100) + "%</td><td>" + (on.length ? pxPct(pack * 100) + "%" + (pack > 0 && pack < 0.5 ? " (1 из " + Math.round(1 / pack) + ")" : "") : "—") + "</td></tr>"; };
+  return '<table class="pxodds"><tr><th>Категория</th><th>В выпадении</th><th>Множитель</th><th>Место в паке</th><th>Хотя бы 1 в паке</th></tr>' + PX_CATS.map(row).join("") + "</table>";
 }
 function buildPack(m) {
-  const seg = '<div class="seg" id="pxseg"><button data-v="box"' + (st.pv !== "phys" ? ' class="on"' : "") + '>Бустер</button><button data-v="phys"' + (st.pv === "phys" ? ' class="on"' : "") + ">Физическая коллекция</button></div>";
-  if (st.pv !== "phys") { m.innerHTML = '<div class="tb"><div class="bar">' + seg + '</div></div><div id="body"></div>'; }
-  else {
-    const opt = (arr, cur) => arr.map(x => '<option value="' + x[0] + '"' + (String(cur) === String(x[0]) ? " selected" : "") + ">" + x[1] + "</option>").join("");
+  const seg = '<div class="seg" id="pxseg">' + [["box", "Бустер"], ["phys", "Физическая коллекция"], ["drop", "Выпадение"]].map(x => '<button data-v="' + x[0] + '"' + ((st.pv || "box") === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div>";
+  const opt = (arr, cur) => arr.map(x => '<option value="' + x[0] + '"' + (String(cur) === String(x[0]) ? " selected" : "") + ">" + x[1] + "</option>").join("");
+  const catSel = (id, cur) => '<select id="' + id + '">' + opt([["", "Все категории"]].concat(PX_CATS.map(c => [c, PX_CN[c]])), cur) + "</select>";
+  if (st.pv === "phys") {
     m.innerHTML = '<div class="tb"><div class="bar">' + seg + '</div><div class="bar"><input id="pxq" type="search" placeholder="Поиск по имени или номеру" value="' + esc(st.pq) + '">' +
       '<div class="seg" id="pxf">' + [["all", "Все"], ["have", "Есть"], ["miss", "Нет"]].map(x => '<button data-v="' + x[0] + '"' + (st.pf === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div>" +
-      '<select id="pxg">' + opt([["", "Все поколения"]].concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(g => [g, "Поколение " + g])), st.pg) + '</select></div><div class="prog" id="pxprog"></div></div><div id="body"></div>';
+      catSel("pxc", st.pc) + '<select id="pxg">' + opt([["", "Все поколения"]].concat([1, 2, 3, 4, 5, 6, 7, 8, 9].map(g => [g, "Поколение " + g])), st.pg) + '</select></div><div class="prog" id="pxprog"></div></div><div id="body"></div>';
     $("#pxq").oninput = e => { st.pq = e.target.value; draw(); };
     $("#pxg").onchange = e => { st.pg = e.target.value; draw(); };
+    $("#pxc").onchange = e => { st.pc = e.target.value; draw(); };
     $("#pxf").onclick = e => { const v = e.target.dataset.v; if (v) { st.pf = v; build(); } };
-  }
+  } else if (st.pv === "drop") {
+    const mode = '<div class="seg" id="pxmode">' + [["all", "Все варианты"], ["cats", "Категории"], ["pick", "Выбор вручную"]].map(x => '<button data-v="' + x[0] + '"' + (pcfg.mode === x[0] ? ' class="on"' : "") + ">" + x[1] + "</button>").join("") + "</div>";
+    const pick = pcfg.mode === "pick" ? '<div class="bar"><input id="pxdq" type="search" placeholder="Поиск по имени или номеру" value="' + esc(st.dq) + '">' + catSel("pxdc", st.dc) +
+      '<button class="fav" id="pxallon">Включить все</button><button class="fav" id="pxalloff">Выключить все</button></div>' : "";
+    m.innerHTML = '<div class="tb"><div class="bar">' + seg + '</div><div class="bar">' + mode + "</div>" + pick + '<div class="prog" id="pxdprog"></div></div><div id="body"></div>';
+    $("#pxmode").onclick = e => { const v = e.target.dataset.v; if (!v || v === pcfg.mode) return;
+      if (v === "pick" && pcfg.off === null) { pxOff = new Set(pxv.filter(x => pcfg.mode === "cats" && !pcfg.cats[x.cat]).map(x => x.id)); pcfg.off = []; }
+      pcfg.mode = v; savePcfg(); pxRecalc(); build(); };
+    if (pcfg.mode === "pick") {
+      $("#pxdq").oninput = e => { st.dq = e.target.value; draw(); };
+      $("#pxdc").onchange = e => { st.dc = e.target.value; draw(); };
+      const bulk = on => { pxDropList().forEach(v => on ? pxOff.delete(v.id) : pxOff.add(v.id)); savePcfg(); pxRecalc(); draw(); };
+      $("#pxallon").onclick = () => bulk(true); $("#pxalloff").onclick = () => bulk(false);
+    }
+  } else m.innerHTML = '<div class="tb"><div class="bar">' + seg + '</div></div><div id="body"></div>';
   $("#pxseg").onclick = e => { const v = e.target.dataset.v; if (v && v !== st.pv) { st.pv = v; build(); window.scrollTo(0, 0); } };
 }
-function pxProgHtml() { return "Отмечено " + phys.size + " из " + PX_TOTAL + " (" + pct(phys.size, PX_TOTAL) + "%)" + meter(phys.size, PX_TOTAL); }
+const pxQ = s => { const q = String(s || "").trim().toLowerCase().replace(/^#/, "").replace(/^0+(?=\d)/, ""); return v => !q || v.name.toLowerCase().includes(q) || String(v.dex) === q || pxFormLbl(v).toLowerCase().includes(q); };
+const pxDropList = () => { const f = pxQ(st.dq); return pxv.filter(v => (!st.dc || v.cat === st.dc) && f(v)); };
+function pxHaveN(list) { let n = 0; list.forEach(v => { if (pxHas(v.id)) n++; }); return n; }
+function pxProgHtml() {
+  const h = pxHaveN(pxv);
+  return "Собрано " + h + " из " + pxv.length + " вариантов (" + pct(h, pxv.length) + "%)" + meter(h, pxv.length) +
+    '<div class="pxcl">' + PX_CATS.map(c => { const l = pxv.filter(v => v.cat === c); return '<span class="pxvt ' + c + '">' + PX_CN[c] + " " + pxHaveN(l) + "/" + l.length + "</span>"; }).join("") + "</div>";
+}
+function pxRow(v) {
+  const n = pcnt.get(v.id) || 0, sp = pxBySp.get(v.dex) || [v];
+  const spn = v.cat === "O" && sp.length > 1 ? " · вариантов " + pxHaveN(sp) + "/" + sp.length : "";
+  return '<label class="pxrow' + (n ? " on" : "") + '" id="pxr-' + v.id + '"><input type="checkbox" data-px="' + v.id + '"' + (n ? " checked" : "") + ">" + pxImg(v, true) +
+    '<span class="pxn"><b>' + escG(v.name) + (v.cat !== "O" ? ' <i class="pxfm">' + esc(pxFormLbl(v)) + "</i>" : "") + "</b><small>#" + v.dex + " · " + PX_CN[v.cat] + spn + "</small>" +
+    (n ? '<span class="pxqn"><button data-pxm="' + v.id + '" aria-label="Меньше">−</button><b>×' + n + '</b><button data-pxp="' + v.id + '" aria-label="Больше">+</button></span>' : "") + "</span></label>";
+}
 function drawPack(body) {
-  if (!pdx.length) { body.innerHTML = '<p class="empty">Загружаю список покемонов…</p>'; return; }
+  if (!pxv.length) { body.innerHTML = '<p class="empty">Загружаю список покемонов…</p>'; return; }
+  if (st.pv === "drop") { drawDrop(body); return; }
   if (st.pv !== "phys") {
+    const h = pxHaveN(pxv), ho = pxHaveN(pxv.filter(v => v.cat === "O"));
     const last = pstat.last.length ? '<div class="gh" style="font-size:17px">Последнее открытие <span>' + (pstat.t ? new Date(pstat.t).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "") + '</span></div><div class="pxfive">' + pstat.last.map((id, i) => pxMini(id, pstat.fresh[i])).join("") + "</div>" : "";
-    body.innerHTML = '<div class="pxwrap"><div class="pxstage"><button class="pxpack" id="pxpk" aria-label="Открыть ProDex">' + PX_ART_IN + '</button>' +
-      '<button class="pxbtn" id="pxgo">Открыть ProDex</button><div class="prog" style="margin:0;text-align:center">5 случайных покемонов из всех 1025 · повторы возможны</div></div>' +
+    const none = !pxOn.length;
+    body.innerHTML = '<div class="pxwrap"><div class="pxstage"><button class="pxpack" id="pxpk" aria-label="Открыть ProDex"' + (none ? " disabled" : "") + ">" + PX_ART_IN + "</button>" +
+      '<button class="pxbtn" id="pxgo"' + (none ? " disabled" : "") + '>Открыть ProDex</button><div class="prog" style="margin:0;text-align:center">' +
+      (none ? "Ничего не выбрано для выпадения — включите варианты во вкладке «Выпадение»" : "5 случайных из " + pxOn.length + " вариантов в выпадении · повторы возможны") + "</div></div>" +
       '<div class="hero"><div class="hc"><small>Открыто паков</small><div class="big">' + pstat.n + '</div><div class="sub">открытия считаются один раз, перезагрузка их не повторяет</div></div>' +
-      '<div class="hc"><small>Физическая коллекция</small><div class="big">' + phys.size + " <span>/ " + PX_TOTAL + "</span></div>" + meter(phys.size, PX_TOTAL) + '<div class="sub" style="margin-top:6px">осталось ' + (PX_TOTAL - phys.size) + '</div></div></div>' +
-      '<button class="more" id="pxtophys" style="width:100%;margin:0 0 14px">Физическая коллекция →</button>' + last +
-      '<details class="acc" style="margin-top:16px"><summary><span class="ai">🎲</span><span class="at"><b>Шансы выпадения</b><small>обычные чаще, Legendary и Mythical редко</small></span><span class="chv">›</span></summary><div class="accb">' + pxOdds() +
-      '<p class="prog">Каждое из 5 мест в паке выбирается независимо, с весом по официальной категории вида (PokeAPI: is_legendary / is_mythical). Карточки TCG Pocket и их редкость не используются.</p></div></details></div>';
-    $("#pxpk").onclick = $("#pxgo").onclick = pxStart;
+      '<div class="hc"><small>Физическая коллекция</small><div class="big">' + h + " <span>/ " + pxv.length + "</span></div>" + meter(h, pxv.length) + '<div class="sub" style="margin-top:6px">вариантов · Original ' + ho + " / " + PX_TOTAL + "</div></div></div>" +
+      '<div class="bk"><button class="more" id="pxtophys" style="flex:1">Физическая коллекция →</button><button class="more" id="pxtodrop" style="flex:1">Что выпадает →</button></div>' + last +
+      '<details class="acc" style="margin-top:16px"><summary><span class="ai">🎲</span><span class="at"><b>Шансы выпадения</b><small>' + pxModeTxt() + '</small></span><span class="chv">›</span></summary><div class="accb">' + pxOdds() + pxOddsNote() + "</div></details></div>";
+    if (!none) $("#pxpk").onclick = $("#pxgo").onclick = pxStart;
     $("#pxtophys").onclick = () => { st.pv = "phys"; build(); window.scrollTo(0, 0); };
+    $("#pxtodrop").onclick = () => { st.pv = "drop"; build(); window.scrollTo(0, 0); };
     return;
   }
-  const q = st.pq.trim().toLowerCase().replace(/^#/, "");
-  const list = pdx.filter(p => (!st.pg || p.gen === +st.pg) && (st.pf === "all" || (st.pf === "have") === phys.has(p.id)) && (!q || p.name.toLowerCase().includes(q) || String(p.id) === q));
+  const f = pxQ(st.pq);
+  const list = pxv.filter(v => (!st.pg || v.gen === +st.pg) && (!st.pc || v.cat === st.pc) && (st.pf === "all" || (st.pf === "have") === pxHas(v.id)) && f(v));
   $("#pxprog").innerHTML = pxProgHtml();
-  const row = p => '<label class="pxrow' + (phys.has(p.id) ? " on" : "") + '"><input type="checkbox" data-px="' + p.id + '"' + (phys.has(p.id) ? " checked" : "") + ">" + pxImg(p.id, true) +
-    '<span class="pxn"><b>' + escG(p.name) + "</b><small>#" + p.id + (p.cat ? " · " + PX_CAT[p.cat] : "") + "</small></span></label>";
   if (!list.length) { body.innerHTML = '<p class="empty">Ничего не найдено</p>'; return; }
-  if (!st.pg && !q) { let out = ""; for (let g = 1; g <= 9; g++) { const gl = list.filter(p => p.gen === g); if (gl.length) out += '<div class="gh">Поколение ' + g + '<span id="pxgc' + g + '">' + gl.filter(p => phys.has(p.id)).length + " / " + pdx.filter(p => p.gen === g).length + '</span></div><div class="pxlist">' + gl.map(row).join("") + "</div>"; } body.innerHTML = out; }
-  else body.innerHTML = '<div class="pxlist">' + list.map(row).join("") + "</div>";
+  if (!st.pg && !st.pq.trim()) { let out = ""; for (let g = 1; g <= 9; g++) { const gl = list.filter(v => v.gen === g); if (gl.length) out += '<div class="gh">Поколение ' + g + '<span id="pxgc' + g + '">' + pxGenTxt(g) + '</span></div><div class="pxlist">' + gl.map(pxRow).join("") + "</div>"; } body.innerHTML = out; }
+  else body.innerHTML = '<div class="pxlist">' + list.map(pxRow).join("") + "</div>";
 }
-/* ручная отметка в физической коллекции */
-document.addEventListener("change", e => {
-  const t = e.target; if (!t || !t.dataset || !t.dataset.px) return;
-  const id = +t.dataset.px; if (t.checked) phys.add(id); else phys.delete(id); savePhys();
-  const r = t.closest(".pxrow"); if (r) r.classList.toggle("on", t.checked);
+function pxGenTxt(g) { const l = pxv.filter(v => v.gen === g && (!st.pc || v.cat === st.pc)); return pxHaveN(l) + " / " + l.length; }
+const pxModeTxt = () => pcfg.mode === "all" ? "все варианты" : pcfg.mode === "cats" ? "категории: " + (PX_CATS.filter(c => pcfg.cats[c]).map(c => PX_CN[c]).join(", ") || "ни одной") : "выбор вручную: " + pxOn.length + " вариантов";
+const pxOddsNote = () => '<p class="prog">Каждое из 5 мест в паке выбирается независимо. Вес варианта = вес вида × множитель категории. Вес вида: обычный 10, Legendary 2, Mythical 1 (PokeAPI: is_legendary / is_mythical). ' +
+  "* Alternative: множитель 1 делится поровну между альтернативными формами одного вида. Выключенные варианты не выпадают; на каталог и физическую коллекцию настройки не влияют.</p>";
+function drawDrop(body) {
+  const dp = $("#pxdprog"); if (dp) dp.innerHTML = "В выпадении " + pxOn.length + " из " + pxv.length + " вариантов" + meter(pxOn.length, pxv.length);
+  let out = "";
+  if (pcfg.mode === "all") out = '<p class="prog">Выпадают все варианты всех шести категорий. Чтобы ограничить выпадение, выберите «Категории» или «Выбор вручную».</p>';
+  else if (pcfg.mode === "cats") out = '<div class="pxlist">' + PX_CATS.map(c => { const n = pxv.filter(v => v.cat === c).length;
+    return '<label class="pxrow' + (pcfg.cats[c] ? " on" : "") + '"><input type="checkbox" data-pxc="' + c + '"' + (pcfg.cats[c] ? " checked" : "") + '><span class="pxn"><b>' + PX_CN[c] + "</b><small>" + n + " вариантов" + (c === "S" ? " · только для Original" : "") + "</small></span></label>"; }).join("") + "</div>";
+  else { const l = pxDropList();
+    out = l.length ? '<div class="prog">В списке ' + l.length + ", включено " + l.filter(v => !pxOff.has(v.id)).length + '</div><div class="pxlist">' + l.map(v => '<label class="pxrow' + (pxOff.has(v.id) ? "" : " on") + '"><input type="checkbox" data-pxo="' + v.id + '"' + (pxOff.has(v.id) ? "" : " checked") + ">" + pxImg(v, true) +
+      '<span class="pxn"><b>' + escG(v.name) + (v.cat !== "O" ? ' <i class="pxfm">' + esc(pxFormLbl(v)) + "</i>" : "") + "</b><small>#" + v.dex + " · " + PX_CN[v.cat] + "</small></span></label>").join("") + "</div>" : '<p class="empty">Ничего не найдено</p>'; }
+  body.innerHTML = '<div class="panel" style="margin-bottom:14px"><b>Шансы при текущих настройках</b>' + pxOdds() + pxOddsNote() + "</div>" + out;
+}
+/* ручная отметка и счётчики в физической коллекции; переключатели выпадения */
+function pxAfter(id) {
+  const v = pxvById.get(id); if (!v) return;
+  [id, String(v.dex)].forEach(x => { const r = document.getElementById("pxr-" + x), w = pxvById.get(x); if (r && w) r.outerHTML = pxRow(w); });
   const p = $("#pxprog"); if (p) p.innerHTML = pxProgHtml();
-  const g = genOf(id), gc = $("#pxgc" + g); if (gc) gc.textContent = pdx.filter(x => x.gen === g && phys.has(x.id)).length + " / " + pdx.filter(x => x.gen === g).length;
+  const gc = $("#pxgc" + v.gen); if (gc) gc.textContent = pxGenTxt(v.gen);
+}
+document.addEventListener("change", e => {
+  const t = e.target; if (!t || !t.dataset) return;
+  if (t.dataset.px) { const id = t.dataset.px; if (t.checked) pcnt.set(id, Math.max(1, pcnt.get(id) || 0)); else pcnt.delete(id); savePhys(); pxAfter(id); return; }
+  if (t.dataset.pxc) { pcfg.cats[t.dataset.pxc] = t.checked ? 1 : 0; savePcfg(); pxRecalc(); draw(); return; }
+  if (t.dataset.pxo) { if (t.checked) pxOff.delete(t.dataset.pxo); else pxOff.add(t.dataset.pxo); savePcfg(); pxRecalc();
+    const r = t.closest(".pxrow"); if (r) r.classList.toggle("on", t.checked); const dp = $("#pxdprog"); if (dp) dp.innerHTML = "В выпадении " + pxOn.length + " из " + pxv.length + " вариантов" + meter(pxOn.length, pxv.length); return; }
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-pxp],[data-pxm]"); if (!b) return;
+  e.preventDefault();
+  const id = b.dataset.pxp || b.dataset.pxm, n = (pcnt.get(id) || 0) + (b.dataset.pxp ? 1 : -1);
+  if (n > 0) pcnt.set(id, n); else pcnt.delete(id); savePhys(); pxAfter(id);
 });
 /* оверлей открытия пака: разрыв пака → 5 покемонов по одному → итог */
 let pxRun = null;
 function pxLock(on) { if (document.body && document.body.style) document.body.style.overflow = on ? "hidden" : ((st.cardOpen || st.open) ? "hidden" : ""); }
 function pxStart() {
-  if (!pdx.length) return;
-  pxRun = Object.assign(pxOpenPack(), { i: -1 });
+  if (!pxv.length) return;
+  const r = pxOpenPack(); if (!r) { alert("Ничего не выбрано для выпадения. Включите варианты во вкладке «Выпадение»."); return; }
+  pxRun = Object.assign(r, { i: -1 });
   const ov = $("#pxov"); ov.hidden = false; pxLock(true);
   ov.innerHTML = '<div class="pxx"><button id="pxskip">Пропустить</button></div><div class="pxtear" id="pxtear">' + pxArt("top") + pxArt("bot") + '</div><div class="pxhint">Нажми на пак, чтобы открыть</div>';
   if (tab === "pack") draw();
@@ -787,15 +912,16 @@ function pxShow() {
   const ov = $("#pxov"), r = pxRun; if (!r) return;
   if (r.i >= r.ids.length) {
     const nn = r.fresh.filter(Boolean).length;
-    ov.innerHTML = '<div class="pxsum"><h2>Твой ProDex</h2><div class="pxhint">' + (nn ? "Новых в физической коллекции: " + nn : "Все уже были в коллекции") + " · всего " + phys.size + " / " + PX_TOTAL + '</div><div class="pxfive">' + r.ids.map((id, i) => pxMini(id, r.fresh[i], i * .08)).join("") +
+    ov.innerHTML = '<div class="pxsum"><h2>Твой ProDex</h2><div class="pxhint">' + (nn ? "Новых в физической коллекции: " + nn : "Все уже были в коллекции") + " · всего " + pxHaveN(pxv) + " / " + pxv.length + '</div><div class="pxfive">' + r.ids.map((id, i) => pxMini(id, r.fresh[i], i * .08)).join("") +
       '</div><div class="pxact"><button class="pxbtn" id="pxagain">Открыть ещё</button><button class="pxbtn sec" id="pxdone">Готово</button><button class="pxbtn sec" id="pxtophys2">Физическая коллекция</button></div></div>';
     return;
   }
-  const id = r.ids[r.i], p = pdxById.get(id) || { id, name: "#" + id, cat: "" };
+  const v = pxV(r.ids[r.i]);
   ov.innerHTML = '<div class="pxcnt">' + (r.i + 1) + " / " + r.ids.length + '</div><div class="pxx"><button id="pxskip">Пропустить</button></div>' +
-    '<div class="pxbig ' + p.cat + '" id="pxnext">' + pxCatTag(p.cat) + (r.fresh[r.i] ? '<span class="pxnew">NEW</span>' : "") + pxImg(id, false) + '<div class="nm">' + escG(p.name) + '</div><div class="no">#' + id + '</div></div><div class="pxhint">' + (r.i < r.ids.length - 1 ? "Нажми, чтобы увидеть следующего" : "Нажми, чтобы увидеть итог") + "</div>";
+    '<div class="pxbig ' + v.rar + " v" + v.cat + '" id="pxnext">' + pxCatTag(v.rar) + (r.fresh[r.i] ? '<span class="pxnew">NEW</span>' : "") + pxImg(v, false) + '<div class="nm">' + escG(v.name) + "</div>" + pxVTag(v) + '<div class="no">#' + v.dex + "</div></div>" +
+    '<div class="pxhint">' + (r.i < r.ids.length - 1 ? "Нажми, чтобы увидеть следующего" : "Нажми, чтобы увидеть итог") + "</div>";
   /* подгружаем картинку следующего заранее */
-  if (r.i + 1 < r.ids.length) { const im = new Image(); im.src = SPR[0](r.ids[r.i + 1]); }
+  if (r.i + 1 < r.ids.length) { const im = new Image(); im.src = VSPR[0](pxV(r.ids[r.i + 1]).img); }
 }
 function pxClose() { pxRun = null; const ov = $("#pxov"); ov.hidden = true; ov.innerHTML = ""; pxLock(false); if (tab === "pack") draw(); }
 document.addEventListener("click", e => {
@@ -1154,7 +1280,7 @@ $("#nav").onclick = e => {
     cards.sort((a, b) => (si.has(a.set) ? si.get(a.set) : 999) - (si.has(b.set) ? si.get(b.set) : 999) || a.number - b.number);
     if (!cards.length) throw new Error("список карточек пуст");
     buildDex(slugs); indexSpecies(); buildMIS();
-    buildPdx(await pdxReady);
+    buildPdx(await pdxReady); buildPxv(await pvReady);
     if (st.set && !sets.some(x => x.code === st.set)) st.set = "";
     if (st.mset && !sets.some(x => x.code === st.mset)) st.mset = "";
     if (st.set && !sets.some(x => x.code === st.set)) { st.set = ""; st.pack = ""; }
