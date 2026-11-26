@@ -30,9 +30,6 @@ box-sizing:border-box;padding:env(safe-area-inset-top,0) env(safe-area-inset-rig
 html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,"SF Pro Text",system-ui,sans-serif}
 header{position:sticky;top:env(safe-area-inset-top,0);z-index:5;background:var(--bg);padding:10px 14px 0;border-bottom:1px solid var(--ln)}
 h1{font-size:20px;margin:0 0 8px;font-weight:700}
-nav{display:flex;gap:4px}
-nav button{flex:1;padding:10px 6px;border:0;background:none;color:var(--mt);font:inherit;font-weight:600;border-bottom:3px solid transparent}
-nav button.on{color:var(--ac);border-color:var(--ac)}
 main{padding:12px 14px 40px;max-width:1200px;margin:0 auto}
 .bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
 select,input{font:inherit;color:var(--tx);background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:9px 11px;min-width:0}
@@ -135,9 +132,6 @@ input{flex:1;min-width:140px}
 .rc.d{color:#8fb3d9}.rc.s{color:#e8a900}.rc.c{color:#d9a200}.rc.h{color:#b57bff}
 .prow{margin-left:14px;width:calc(100% - 14px)}.sgh{display:flex;align-items:center;gap:10px;margin:16px 2px 8px;flex-wrap:wrap}.sgh b{font-size:18px}
 /* ===== Pack: бустер ProDex и физическая коллекция ===== */
-nav{overflow-x:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}nav button{white-space:nowrap}
-@media(max-width:520px){nav button{font-size:14px;padding:10px 3px}}
-@media(max-width:380px){nav button{font-size:13px}}
 .pxwrap{max-width:620px;margin:0 auto}
 .pxstage{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0 16px}
 .pxpack{--w:210px;position:relative;width:var(--w);aspect-ratio:7/11;border:0;padding:0;cursor:pointer;border-radius:10px 10px 12px 12px;color:#fff;font:inherit;
@@ -213,21 +207,64 @@ nav{overflow-x:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}nav
 .pxbig.vS{box-shadow:0 0 0 3px #ffd84d,0 0 60px rgba(255,216,77,.8)}.pxmini.vS{border-color:#e0a800}
 .pxmini.vR,.pxmini.vA,.pxmini.vM,.pxmini.vG{border-style:dashed}
 .pxpack[disabled],.pxbtn[disabled]{opacity:.45;cursor:not-allowed;animation:none}
+/* ===== боковое меню ===== */
+header{padding:8px 10px}
+.hrow{display:flex;align-items:center;gap:8px}
+.hrow h1{margin:0;font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbtn{flex:none;width:40px;height:40px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);color:var(--tx);padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.hbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+#drw{position:fixed;inset:0;z-index:60;visibility:hidden;transition:visibility 0s .25s}
+#drw.open{visibility:visible;transition:none}
+.dbk{position:absolute;inset:0;background:rgba(10,6,30,.45);opacity:0;transition:opacity .25s}
+#drw.open .dbk{opacity:1}
+.dpn{position:absolute;top:0;bottom:0;left:0;width:min(320px,86vw);background:var(--bg);border-right:1px solid var(--ln);overflow-y:auto;
+ padding:calc(env(safe-area-inset-top,0px) + 12px) 14px calc(env(safe-area-inset-bottom,0px) + 18px) calc(env(safe-area-inset-left,0px) + 14px);
+ transform:translateX(-100%);transition:transform .25s ease;box-shadow:8px 0 30px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:14px}
+#drw.open .dpn{transform:none}
+.dtop{display:flex;align-items:center;justify-content:space-between}.dtop b{font-size:21px}
+.dtiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dtile{position:relative;aspect-ratio:1/.92;border:1px solid var(--ln);border-radius:16px;padding:12px;background:var(--sf);color:var(--tx);font:inherit;font-weight:700;font-size:17px;text-align:left;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.dtile svg{width:48px;height:48px;padding:5px;border-radius:12px;background:linear-gradient(135deg,#8b4dff,#d23bff);box-shadow:0 4px 12px rgba(160,60,255,.35);fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.dtile.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.dtile.on svg{background:rgba(255,255,255,.2);box-shadow:none}
+.dlist{display:flex;flex-direction:column;gap:8px}
+.drow{display:flex;align-items:center;gap:12px;width:100%;border:1px solid var(--ln);background:var(--sf);color:var(--tx);border-radius:12px;padding:10px 12px;font:inherit;font-weight:600;text-align:left;cursor:pointer}
+.drow.on{border-color:var(--ac);color:var(--ac)}
+.di{flex:none;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.di svg{width:19px;height:19px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.di{background:var(--ac)}
+.drow.on{background:var(--ac);border-color:var(--ac);color:#fff}.drow.on .di{background:rgba(255,255,255,.2)}
+.dnote{margin:auto 0 0;font-size:12px;color:var(--mt);text-align:center;line-height:1.45}.dnote b{color:var(--tx)}
+body.dopen{overflow:hidden}
 </style>
 </head>
 <body>
 <header>
-  <h1>ProDex</h1>
-  <nav id="nav">
-    <button data-t="cards" class="on">Карточки</button>
-    <button data-t="species">Покемоны</button>
-    <button data-t="missions">Миссии</button>
-    <button data-t="stats">Статистика</button>
-    <button data-t="pack">Pack</button>
-  </nav>
+  <div class="hrow">
+    <button id="menuBtn" class="hbtn" aria-label="Меню" aria-controls="drw" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <h1 id="secT">Карточки</h1>
+  </div>
 </header>
+<div id="drw" aria-hidden="true">
+  <div class="dbk" data-close="1"></div>
+  <aside class="dpn" id="nav" role="navigation" aria-label="Разделы">
+    <div class="dtop"><b>ProDex</b><button class="hbtn" data-close="1" aria-label="Закрыть меню"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="dtiles">
+      <button class="dtile t1" data-t="cards"><svg viewBox="0 0 48 48"><rect x="8" y="10" width="22" height="30" rx="3" transform="rotate(-10 19 25)"/><rect x="18" y="8" width="22" height="30" rx="3" fill="rgba(255,255,255,.25)"/><path d="M24 17h10M24 22h10M24 27h6"/></svg><span>Карточки</span></button>
+      <button class="dtile t2" data-t="species"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15"/><path d="M9 24h10M29 24h10"/><circle cx="24" cy="24" r="5" fill="rgba(255,255,255,.25)"/></svg><span>Покемоны</span></button>
+      <button class="dtile t3" data-t="missions"><svg viewBox="0 0 48 48"><rect x="11" y="8" width="26" height="33" rx="4"/><path d="M16 18l3 3 5-6M16 30l3 3 5-6M28 19h5M28 31h5"/></svg><span>Миссии</span></button>
+      <button class="dtile t4" data-t="pack"><svg viewBox="0 0 48 48"><path d="M13 7h22l-2 4 2 4v18l-2 4 2 4H13l2-4-2-4V15l2-4z" fill="rgba(255,255,255,.25)"/><circle cx="24" cy="24" r="6"/><path d="M18 24h12"/></svg><span>Pack</span></button>
+    </div>
+    <div class="dlist">
+      <button class="drow" data-t="stats"><i class="di c1"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg></i>Статистика</button>
+      <button class="drow" data-t="pack" data-pv="phys"><i class="di c2"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg></i>Физическая коллекция</button>
+      <button class="drow" data-t="pack" data-pv="drop"><i class="di c3"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></i>Настройки выпадения</button>
+    </div>
+    <p class="dnote"><b>Сделано фанатами для себя.</b><br>Неофициальный проект, не связан с The Pokémon Company, Creatures и DeNA.</p>
+  </aside>
+</div>
 <main id="main"><p class="empty">Загружаю карточки…</p></main>
-<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v40</footer>
+<footer class="src">Данные: <a href="https://github.com/flibustier/pokemon-tcg-pocket-database" target="_blank" rel="noopener">flibustier/pokemon-tcg-pocket-database</a>, <a href="https://github.com/PocketDecks/pokemon-tcg-pocket-cards" target="_blank" rel="noopener">PocketDecks/pokemon-tcg-pocket-cards</a>. Задания: Bulbapedia. Покемоны: PokeAPI. · v41</footer>
 
 <div id="pv" hidden></div>
 <div id="cv" hidden></div>
@@ -928,7 +965,7 @@ document.addEventListener("click", e => {
   const ov = $("#pxov"); if (!ov || ov.hidden || !ov.contains(e.target)) return;
   const r = pxRun, c = id => e.target.closest("#" + id);
   if (c("pxdone")) { pxClose(); return; }
-  if (c("pxtophys2")) { pxClose(); st.pv = "phys"; if (tab !== "pack") { tab = "pack"; document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x.dataset.t === "pack")); } build(); window.scrollTo(0, 0); return; }
+  if (c("pxtophys2")) { pxClose(); st.pv = "phys"; if (tab !== "pack") tab = "pack"; build(); window.scrollTo(0, 0); return; }
   if (c("pxagain")) { pxStart(); return; }
   if (!r) return;
   if (c("pxskip")) { r.i = r.ids.length; pxShow(); return; }
@@ -1146,6 +1183,7 @@ function build() {
     $("#fsec").onclick = e => { const v = e.target.dataset.v; if (v) { st.secret = v === "1"; build(); } };
   }
   draw();
+  navSync();
   setHH();
 }
 function setHH() { const h = document.querySelector("header"), de = document.documentElement; if (h && h.offsetHeight && de && de.style) de.style.setProperty("--hh", h.offsetHeight + "px"); }
@@ -1253,13 +1291,37 @@ document.addEventListener("click", e => {
   const b = e.target.closest(".card"); if (!b) return;
   openCard(b.dataset.id);
 });
-$("#nav").onclick = e => {
-  const t = e.target.dataset.t; if (!t) return;
-  tab = t; st.limit = 30;
-  document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x.dataset.t === t));
+/* боковое меню разделов */
+const SEC_T = { cards: "Карточки", species: "Покемоны", missions: "Миссии", stats: "Статистика", pack: "Pack" };
+function navSync() {
+  const pv = st.pv || "box";
+  document.querySelectorAll("#nav [data-t]").forEach(x => {
+    let on = x.dataset.t === tab;
+    if (on && tab === "pack") on = x.dataset.pv ? x.dataset.pv === pv : pv === "box";
+    x.classList.toggle("on", on);
+  });
+  const h = $("#secT"); if (h) h.textContent = SEC_T[tab] || "ProDex";
+}
+function drawer(open) {
+  const d = $("#drw"); if (!d) return;
+  d.classList.toggle("open", open); d.setAttribute("aria-hidden", open ? "false" : "true");
+  $("#menuBtn").setAttribute("aria-expanded", open ? "true" : "false");
+  document.body.classList.toggle("dopen", open);
+  if (open) navSync();
+}
+$("#menuBtn").onclick = () => drawer(true);
+$("#drw").onclick = e => {
+  if (e.target.closest("[data-close]")) { drawer(false); return; }
+  const b = e.target.closest("[data-t]"); if (!b) return;
+  const t = b.dataset.t;
+  if (t === "pack") st.pv = b.dataset.pv || (tab === "pack" ? st.pv : "box") || "box";
+  if (tab !== t) st.limit = 30;
+  tab = t;
+  drawer(false);
   build();
   window.scrollTo(0, 0);
 };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#drw").classList.contains("open")) drawer(false); });
 
 (async () => {
   const msg = t => { $("#main").innerHTML = '<p class="empty">' + t + "</p>"; };
@@ -1286,7 +1348,7 @@ $("#nav").onclick = e => {
     if (st.set && !sets.some(x => x.code === st.set)) { st.set = ""; st.pack = ""; }
     if (st.pack && !sets.some(x => x.code === st.pack.split("|")[0])) st.pack = "";
     try { if (dataFixes.length) console.info("Автоисправления данных (сам файл не меняется):", dataFixes); } catch (e) {}
-    document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x.dataset.t === tab));
+    navSync();
     try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
     const nw = sets.find(x => cards.some(c => c.set === x.code));
     build();
